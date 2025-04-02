@@ -2,6 +2,7 @@ import expess from "express";
 import { User } from "../Schemmas/UserSchemma.js";
 import { upload } from "../middleware/multer.js";
 import { uploadImage } from "../utils/clodinary.js";
+import { verifyUser } from "../middleware/verifyUser.js";
 export const router = expess.Router();
 
 router.get("/api/test", async (req, res) => {
@@ -98,3 +99,21 @@ router.post("/api/login", async (req, res) => {
     });
   }
 });
+
+
+router.get("/api/get-user",verifyUser,async(req,res)=>{
+  try {
+    const user = await User.findById(req.user._id).select("-password")
+    return res.status(200).json({
+      status: true,
+      message: "User Fetched Successfully",
+      data: user,
+    })
+  } catch (error) {
+    console.log(error);
+    res.status(500).json({
+      status: false,
+      message: "Internal Server Error",
+    });
+  }
+})

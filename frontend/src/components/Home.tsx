@@ -31,14 +31,14 @@ export default function LandingPage() {
   const getUser = async () => {
     setLoading(true)
     try {
-      const response = await Axios.get("/api/getuser")
+      const response = await Axios.get("/api/get-user")
       console.log(response.data)
       setUser(response.data.data)
     } catch (error) {
       console.log(error)
       try {
         await refreshAccessToken()
-        const response = await Axios.get("/api/getuser")
+        const response = await Axios.get("/api/get-user")
         setUser(response.data.data)
       } catch (error) {
         console.log(error)
