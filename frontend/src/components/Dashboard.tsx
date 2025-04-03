@@ -1,14 +1,19 @@
-import React, { useEffect, useState } from 'react'
+import { useEffect, useState } from 'react'
 import { h2, h3, primaryButton, Primarypara } from '../Themeclasses'
 import DrawingCard from './DrawingCard'
 import { Axios } from '../ApiFormat'
 import { useNavigate } from 'react-router'
 // import { socket } from '../Socket'
-
+export interface Drawing {
+    _id: string;
+    title: string;
+    elements: any[];
+}
 export default function Dashboard() {
     // const [isConnected, setIsConnected] = useState(socket.connected);
     const navigate = useNavigate()
-    const [drawings, setDrawings] = useState<any>(null)
+  
+    const [drawings, setDrawings] = useState<Drawing[] | null>(null)
     const [loading, setLoading] = useState<boolean>(true)
     const Fetchdrawings = async () => {
         setLoading(true)
@@ -24,14 +29,14 @@ export default function Dashboard() {
         }
     }
     useEffect(() => {
-        function onConnect() {
-            setIsConnected(true);
-            console.log("Connected")
-        }
+        // function onConnect() {
+        //     setIsConnected(true);
+        //     console.log("Connected")
+        // }
 
-        function onDisconnect() {
-            setIsConnected(false);
-        }
+        // function onDisconnect() {
+        //     setIsConnected(false);
+        // }
         // socket.on('connect', onConnect);
         // socket.on('disconnect', onDisconnect);
         Fetchdrawings()

@@ -102,3 +102,25 @@ router.delete("/api/delete-drawing",verifyUser,async(req,res)=>{
       }) 
     }
 })
+
+router.post("/api/create-drawing",verifyUser,async(req,res)=>{
+    try {
+        const {_id}=req.user
+        const newDrawing = new drawing({
+            title: req.body.title,
+            userId: _id,
+        })
+       await newDrawing.save()
+       return res.status(200).json({
+            status:true,
+            message:"Drawing created successfully",
+            data:newDrawing,
+        })
+    } catch (error) {
+        console.log(error)
+        return res.status(500).json({
+            status:false,
+            message:"Internal Server Error",
+        })
+    }
+})

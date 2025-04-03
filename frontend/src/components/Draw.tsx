@@ -6,27 +6,28 @@ import { useDebounce } from "@uidotdev/usehooks";
 import { ToastContainer, toast } from 'react-toastify';
 import { useNavigate, useSearchParams } from 'react-router';
 import { Axios } from '../ApiFormat';
+import { Drawing } from './Dashboard';
 // import { socket } from '../Socket';
-import Cookies from 'js-cookie';
+// import Cookies from 'js-cookie';
 
 
 export default function Draw() {
   //if there is a room
-  const [isRoomActive,setIsRoomActive]=useState("")
+  // const [isRoomActive,setIsRoomActive]=useState("")
   const [excalidrawAPI, setExcalidrawAPI] = useState<any>(null);
-  const updateScenenow = () => {
-    if(excalidrawAPI){
-      const sceneData = {
-        elements: sceneElements
-      };
-      setInitialDrawings([])
-    }
-  };
+  // const updateScenenow = () => {
+  //   if(excalidrawAPI){
+  //     const sceneData = {
+  //       elements: sceneElements
+  //     };
+  //     setInitialDrawings([])
+  //   }
+  // };
   const navigate=useNavigate()
-  const [copied, setCopied] = useState(false);
+  // const [copied, setCopied] = useState(false);
   const [saving,setSaving]=useState<boolean>(false)
   const [searchParams] = useSearchParams();
-  const [initialDrawings, setInitialDrawings] = useState<any>(null)
+  const [initialDrawings, setInitialDrawings] = useState<Drawing[]|[]|null>(null)
   const [drawingData,setDrawingData]=useState<any>(null)
   // const [excalidrawAPI, setExcalidrawAPI] = useState<any>(null)
   const [sceneElements, setSceneElements] = useState<any>()

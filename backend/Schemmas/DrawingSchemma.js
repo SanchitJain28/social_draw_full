@@ -8,6 +8,7 @@ import mongoose from 'mongoose';
      elements: {
          type: [Schema.Types.Mixed],
          required: true,
+         default: [],
      },
      userId:{
         type:Schema.Types.ObjectId,
