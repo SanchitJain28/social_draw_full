@@ -1,6 +1,6 @@
 import express from 'express'
 import { router as Authentication } from './routes/Authentication.js'
-//  import { router as signUpRouter } from './routes/signUp/route.js'
+import { router as Drawing } from './routes/Drawing.js'
  import cookieParser from 'cookie-parser'
  import cors from 'cors'
 import { RunDatabase } from './database.js'
@@ -15,8 +15,7 @@ import { RunDatabase } from './database.js'
  app.use(express.json()); // Add this line to parse JSON request bodies
  app.use(express.urlencoded({ extended: true })); // Optional: for form data
  app.use(Authentication)
-//  app.use(signUpRouter)
- 
+app.use(Drawing) 
  const port = 3000
  
  app.get('/', (req, res) => {

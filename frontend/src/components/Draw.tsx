@@ -47,9 +47,9 @@ export default function Draw() {
       const response = await Axios.get(`/api/single-drawing?id=${searchParams.get("id")}`)
       const { data } = response.data
       console.log(data)
-      setDrawingData(data[0])
-      setInitialDrawings(data[0].elements)
-      setSceneElements(data[0].elements)
+      setDrawingData(data)
+      setInitialDrawings(data.elements)
+      setSceneElements(data.elements)
     } catch (error) {
       console.log(error)
     }

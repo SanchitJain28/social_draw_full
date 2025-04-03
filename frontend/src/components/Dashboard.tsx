@@ -13,7 +13,7 @@ export default function Dashboard() {
     const Fetchdrawings = async () => {
         setLoading(true)
         try {
-            const response = await Axios.get("/api/drawings")
+            const response = await Axios.get("/api/get-drawings")
             console.log(response)
             setDrawings(response.data.data)
         } catch (error) {
