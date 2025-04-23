@@ -73,7 +73,7 @@ export default function SharedDraw() {
         <div className='bg-[#121212]'>
             <div className="border-b border-zinc-600 flex items-center px-8 py-4 justify-between">
                 <p className={Primarypara}>{drawingData?.title}</p>
-                <p className={Secondarypara}>{saving ? "Saving" : ""}</p>
+                <p className={Secondarypara}>{saving ? "Saving on cloud" : ""}</p>
             </div>
             <div style={{ height: "100vh", borderRadius: "0px" }} className='custom-styles rounded-full '>
                 {initialDrawings && <Excalidraw
