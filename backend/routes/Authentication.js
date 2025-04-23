@@ -75,11 +75,14 @@ router.post("/api/login", async (req, res) => {
       httpOnly: true,
       secure: true,
       expires: new Date(Date.now() + 10 * 24 * 60 * 60 * 1000),
+      sameSite: 'None'
     };
     const option = {
       httpOnly: true,
       secure: true,
       expires: new Date(Date.now() + 6 * 60 * 60 * 1000),
+      sameSite: 'None'
+
     };
     user.refreshToken = refreshToken;
     await user.save();
@@ -150,11 +153,15 @@ router.post("/api/refresh-access-token", async (req, res) => {
       httpOnly: true,
       secure: true,
       expires: new Date(Date.now() + 10 * 24 * 60 * 60 * 1000),
+      sameSite: 'None'
+
     };
     const option = {
       httpOnly: true,
       secure: true,
       expires: new Date(Date.now() + 6 * 60 * 60 * 1000),
+      sameSite: 'None'
+
     };
     user.refreshToken = newRefreshToken;
     await user.save();
