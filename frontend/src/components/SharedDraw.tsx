@@ -5,13 +5,17 @@ import { useDebounce } from "@uidotdev/usehooks";
 import { useSearchParams } from 'react-router';
 import { Axios } from '../ApiFormat';
 import { h2, Primarypara, Secondarypara } from '../Themeclasses';
+import { ExcalidrawInitialDataState,} from '@excalidraw/excalidraw/types';
+import { Drawing } from './Dashboard';
+import {  ExcalidrawElement, OrderedExcalidrawElement } from '@excalidraw/excalidraw/element/types';
+
 // import { socket } from '../Socket';
 export default function SharedDraw() {
     const [saving, setSaving] = useState<boolean>(false)
     const [searchParams] = useSearchParams();
-    const [initialDrawings, setInitialDrawings] = useState<any>([])
-    const [drawingData, setDrawingData] = useState<any>(null)
-    const [sceneElements, setSceneElements] = useState<any>()
+    const [initialDrawings, setInitialDrawings] = useState<ExcalidrawInitialDataState | null>(null)
+    const [drawingData, setDrawingData] = useState<Drawing | null>(null)
+    const [sceneElements, setSceneElements] = useState<readonly OrderedExcalidrawElement[] | null | undefined>()
     const debouncedSceneElements = useDebounce(sceneElements, 1000);
     
     useEffect(() => {
@@ -57,8 +61,8 @@ export default function SharedDraw() {
         }
         updateDrawing()
     }, [debouncedSceneElements])
-    const handleOnchange = (excalidrawElements) => {
-        setSceneElements(excalidrawElements)
+    const handleOnchange = (excalidrawElements:readonly ExcalidrawElement[] | null) => {
+        setSceneElements(excalidrawElements as readonly OrderedExcalidrawElement[] | null)
     }
     if (!initialDrawings) {
         return <div>
@@ -68,7 +72,7 @@ export default function SharedDraw() {
     return (
         <div className='bg-[#121212]'>
             <div className="border-b border-zinc-600 flex items-center px-8 py-4 justify-between">
-                <p className={Primarypara}>{drawingData.title}</p>
+                <p className={Primarypara}>{drawingData?.title}</p>
                 <p className={Secondarypara}>{saving ? "Saving" : ""}</p>
             </div>
             <div style={{ height: "100vh", borderRadius: "0px" }} className='custom-styles rounded-full '>
@@ -76,9 +80,9 @@ export default function SharedDraw() {
                     theme='dark'
                     initialData={{
                         elements: [
-                            ...initialDrawings
+                          ...(Array.isArray(initialDrawings) ? initialDrawings : [])
                         ]
-                    }}
+                      }}
                     // excalidrawAPI={(api) => setExcalidrawAPI(api)}
                     onChange={handleOnchange} />}
             </div>

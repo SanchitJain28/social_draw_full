@@ -30,11 +30,20 @@ export default function FileUpload() {
             <form action="/profile" onSubmit={(e)=>{
                 e.preventDefault();
             }} >
-                <input type="file" onChange={(e)=>{
-                    if (e.target.files && e.target.files[0]) {
-                        setFiles(e.target.files[0]);
-                    }
-                }} name="avatar" className='text-white bg-black rounded p-4 mx-4 rounded-lg my-4' />
+                <label htmlFor="file-upload" className="sr-only">Upload File</label>
+                <input 
+                    id="file-upload" 
+                    type="file" 
+                    title="Choose a file to upload" 
+                    placeholder="No file chosen" 
+                    onChange={(e)=>{
+                        if (e.target.files && e.target.files[0]) {
+                            setFiles(e.target.files[0]);
+                        }
+                    }} 
+                    name="avatar" 
+                    className='text-white bg-black p-4 mx-4 rounded-lg my-4' 
+                />
             </form>
             <button className={primaryButton + "my-4"} onClick={()=>{
                 fileUpload()
