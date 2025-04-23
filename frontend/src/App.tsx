@@ -6,7 +6,6 @@ import SignUp from "./components/signup";
 import Draw from "./components/Draw";
 import Dashboard from "./components/Dashboard";
 import SharedDraw from "./components/SharedDraw";
-import MakeRoom from "./components/makeRoom";
 
 function App() {
   return (
@@ -55,13 +54,7 @@ function App() {
           </div>
         } />
       </Routes>
-      <Routes>
-        <Route path="/make-a-room" element={
-          <div>
-            <MakeRoom/>
-          </div>
-        } />
-      </Routes>
+     
       </BrowserRouter>
     </>
   )

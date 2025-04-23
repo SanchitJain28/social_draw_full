@@ -1,5 +1,5 @@
-import React from 'react'
-import { h3, Secondaryh1, Secondaryh2, Secondaryh3, Secondaryh4, Secondarypara } from '../Themeclasses'
+
+import { h3,  Secondaryh3, Secondaryh4 } from '../Themeclasses'
 
 export default function Info() {
   return (

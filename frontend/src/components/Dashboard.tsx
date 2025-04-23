@@ -32,6 +32,7 @@ export interface elementProps {
   updated: number;
   link: null;
   locked: boolean;
+  boundElements?: { id: string; type: string }[] | null; 
 }
 
 export interface Roundness {

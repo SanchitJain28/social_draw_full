@@ -9,7 +9,7 @@ import { h2, Primarypara, Secondarypara } from '../Themeclasses';
 export default function SharedDraw() {
     const [saving, setSaving] = useState<boolean>(false)
     const [searchParams] = useSearchParams();
-    const [initialDrawings, setInitialDrawings] = useState<any>(null)
+    const [initialDrawings, setInitialDrawings] = useState<any>([])
     const [drawingData, setDrawingData] = useState<any>(null)
     const [sceneElements, setSceneElements] = useState<any>()
     const debouncedSceneElements = useDebounce(sceneElements, 1000);

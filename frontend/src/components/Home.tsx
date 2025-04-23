@@ -24,7 +24,7 @@ export default function LandingPage() {
       console.log(response)
       console.log("token refreshed")
     } catch (error) {
-      // console.log(error)
+      console.log(error)
       console.log("error in refreshing token")
     }
   }
@@ -61,7 +61,7 @@ export default function LandingPage() {
     <div className="flex flex-col justify-center p-8">
       <div className="flex flex-row justify-between">
         <p className={h2 + " my-4"}>{user ? "hi " + user?.name : "Please log in"} </p>
-        {user?.profilePic?<img src={user?.profilePic} className='w-24 rounded-lg' />:""}
+        {user?.profilePic?<img src={user?.profilePic} alt={`${user.name}'s profile picture`} className='w-24 rounded-lg' />:""}
       </div>
 
       <p className={h2 + " my-4"}>Welcome to Social Draw, draw with your friends</p>
