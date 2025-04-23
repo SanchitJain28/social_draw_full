@@ -3,7 +3,6 @@ import LandingPage from "./components/Home";
 import FileUpload from "./components/FileUpload";
 import Login from "./components/login";
 import SignUp from "./components/signup";
-import { Toaster } from "./components/ui/sonner"
 import Draw from "./components/Draw";
 import Dashboard from "./components/Dashboard";
 import SharedDraw from "./components/SharedDraw";
@@ -31,7 +30,6 @@ function App() {
       <Routes>
         <Route path="/signup" element={
           <div>
-             <Toaster />
             <SignUp/>
           </div>
         } />
@@ -39,7 +37,6 @@ function App() {
       <Routes>
         <Route path="/draw" element={
           <div>
-             <Toaster />
             <Draw/>
           </div>
         } />
@@ -47,7 +44,6 @@ function App() {
       <Routes>
         <Route path="/dashboard" element={
           <div>
-             <Toaster />
             <Dashboard/>
           </div>
         } />
@@ -55,7 +51,6 @@ function App() {
       <Routes>
         <Route path="/draw/shared" element={
           <div>
-             <Toaster />
             <SharedDraw/>
           </div>
         } />
@@ -63,7 +58,6 @@ function App() {
       <Routes>
         <Route path="/make-a-room" element={
           <div>
-             <Toaster />
             <MakeRoom/>
           </div>
         } />

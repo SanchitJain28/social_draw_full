@@ -20,11 +20,12 @@ export default function LandingPage() {
 
   const refreshAccessToken = async () => {
     try {
-      const response = await Axios.get("/api/refreshaccesstoken")
+      const response = await Axios.post("/api/refresh-access-token")
       console.log(response)
       console.log("token refreshed")
     } catch (error) {
-      console.log(error)
+      // console.log(error)
+      console.log("error in refreshing token")
     }
   }
 

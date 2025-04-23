@@ -1,8 +1,12 @@
 {
   "files": [],
   "references": [
-    { "path": "./tsconfig.app.json" },
-    { "path": "./tsconfig.node.json" }
+    {
+      "path": "./tsconfig.app.json"
+    },
+    {
+      "path": "./tsconfig.node.json"
+    }
   ],
   "compilerOptions": {
     "baseUrl": ".",
@@ -10,7 +14,10 @@
       "@/*": [
         "./src/*"
       ]
-    }
-   
+    },
+    "forceConsistentCasingInFileNames": true,
+    "strict": true,
+    "noEmitOnError": false,     // ← allows emitting files even if there are type errors
+    "skipLibCheck": true 
   }
 }

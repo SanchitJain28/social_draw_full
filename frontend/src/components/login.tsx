@@ -1,4 +1,3 @@
-import axios from "axios";
 import { h2, normalInput, primaryButton, Primarypara, Secondarypara } from "../Themeclasses";
 import { useForm } from "react-hook-form";
 import { useState } from "react";
@@ -7,6 +6,7 @@ import { toast } from "sonner"
 import { SignInSchemma } from "../Schemmas/SignInSchemma";
 import Cookies from "js-cookie";
 import { useNavigate } from "react-router";
+import { Axios } from "@/ApiFormat";
 
 interface FormDataProps {
   email: string;
@@ -26,10 +26,7 @@ setAccessToken("your_jwt_token");
 export default function Login() {
   const router=useNavigate()
   const [loading, setLoading] = useState<boolean>(false)
-  const Axios = axios.create({
-    baseURL: 'http://localhost:3000',
-    withCredentials: true
-  });
+ 
   
   const { register, handleSubmit, formState: { errors } } = useForm({
     resolver: zodResolver(SignInSchemma)

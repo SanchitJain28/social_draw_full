@@ -43,7 +43,7 @@ import mongoose from 'mongoose';
              email: this.password
          },
          "SanchitkaKhufiyaSecret",
-         {expiresIn:"1d"}
+         {expiresIn:"6hr"}
      )
      return token
  }

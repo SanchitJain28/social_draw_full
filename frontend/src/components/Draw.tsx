@@ -6,9 +6,8 @@ import { useDebounce } from "@uidotdev/usehooks";
 import { ToastContainer, toast } from 'react-toastify';
 import { useNavigate, useSearchParams } from 'react-router';
 import { Axios } from '../ApiFormat';
-import { Drawing } from './Dashboard';
-// import { socket } from '../Socket';
-// import Cookies from 'js-cookie';
+import { Drawing, elementProps } from './Dashboard';
+
 
 
 export default function Draw() {
@@ -45,9 +44,7 @@ export default function Draw() {
   }
   const getDrawing = async () => {
     try {
-      const response = await Axios.get(`/api/single-drawing?id=${searchParams.get("id")}`)
-      const { data } = response.data
-      console.log(data)
+      const {data :{data}} = await Axios.get(`/api/single-drawing?id=${searchParams.get("id")}`)
       setDrawingData(data)
       setInitialDrawings(data.elements)
       setSceneElements(data.elements)
@@ -55,7 +52,7 @@ export default function Draw() {
       console.log(error)
     }
   }
-  const handleOnchange = (excalidrawElements) => {
+  const handleOnchange = (excalidrawElements:elementProps) => {
     setSceneElements(excalidrawElements)
   }
   useEffect(() => {
@@ -71,7 +68,7 @@ export default function Draw() {
     //   });
     //  socket.emit('join room', Cookies.get("roomId"));
     // }
-    
+    console.log(initialDrawings)
     console.log(searchParams.get("id"))
   }, [])
   useEffect(() => {
@@ -97,15 +94,7 @@ export default function Draw() {
     }
     updateDrawing()
   }, [debouncedSceneElements])
-  const handleCopy = async () => {
-    try {
-      await navigator.clipboard.writeText(`http://localhost:5173/draw/shared?id=${searchParams.get('id')}`);
-      setCopied(true);
-      setTimeout(() => setCopied(false), 2000); // Reset after 2 seconds
-    } catch (error) {
-      console.error("Failed to copy:", error);
-    }
-  };
+  
   if(!initialDrawings){
     return <div>
       <p className={h2}>Loading...</p>
@@ -121,7 +110,7 @@ export default function Draw() {
       </div>
       <div  style={{ height: "100vh", borderRadius: "0px" }} className='custom-styles rounded-full '>
         {initialDrawings && <Excalidraw
-        
+
           theme='dark'
           initialData={{
             elements: [
