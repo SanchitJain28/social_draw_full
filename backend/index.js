@@ -8,7 +8,7 @@ import { RunDatabase } from './database.js'
  RunDatabase()
  const app = express()
  app.use(cors({
-  origin: "http://localhost:5173",
+  origin: "https://socialdraw.netlify.app",
   credentials: true,
  }))
  app.use(cookieParser())
