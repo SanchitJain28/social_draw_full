@@ -1,9 +1,8 @@
 import { useEffect, useState } from "react";
-import { h2, h3, primaryButton, Primarypara } from "../Themeclasses";
-import DrawingCard from "./DrawingCard";
+import { h2, h3, Primarypara } from "../Themeclasses";
 import { Axios } from "../ApiFormat";
 import { useNavigate } from "react-router";
-
+import { ModalComponent } from "./modal";
 
 // import { socket } from '../Socket'
 export interface elementProps {
@@ -32,7 +31,7 @@ export interface elementProps {
   updated: number;
   link: null;
   locked: boolean;
-  boundElements?: { id: string; type: string }[] | null; 
+  boundElements?: { id: string; type: string }[] | null;
 }
 
 export interface Roundness {
@@ -66,25 +65,15 @@ export default function Dashboard() {
   useEffect(() => {
     Fetchdrawings();
   }, []);
-  const [create, setCreate] = useState<boolean>(false);
   if (loading) {
     return <p className={h3}>Loading...</p>;
   }
   return (
     <div className="p-8">
       <p className={h2 + "my-4"}>Create a Drawing</p>
-      
+      <ModalComponent isOpen={false}/>
 
-      <button
-        className={primaryButton}
-        onClick={() => {
-          setCreate(true);
-        }}
-      >
-        Create
-      </button>
-      {create && <DrawingCard />}
-      <div className="grid grid-cols-3">
+      <div className="grid lg:grid-cols-3 grid-cols-1">
         {drawings &&
           drawings.map((e, index: number) => {
             return (
@@ -95,7 +84,7 @@ export default function Dashboard() {
                 }}
                 className="border border-zinc-600 rounded-xl p-4 my-4 mr-4"
               >
-                <p className={Primarypara + "text-5xl"}>{e.title}</p>
+                <p className={Primarypara + ""}>{e.title}</p>
               </div>
             );
           })}

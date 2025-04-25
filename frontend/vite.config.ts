@@ -2,12 +2,10 @@ import { defineConfig } from 'vite'
 import react from '@vitejs/plugin-react-swc'
 import tailwindcss from '@tailwindcss/vite'
 import tsconfigPaths from "vite-tsconfig-paths"
+import flowbiteReact from "flowbite-react/plugin/vite";
 
 
 // https://vite.dev/config/
 export default defineConfig({
-  plugins: [react(), tailwindcss(),tsconfigPaths()],
-  server: {
-    allowedHosts: ['shiny-heads-send.loca.lt'], // allow localtunnel domain
-  }
+  plugins: [react(), tailwindcss(), tsconfigPaths(), flowbiteReact()],
 })
