@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import { h2, h3, Primarypara } from "../Themeclasses";
 import { Axios } from "../ApiFormat";
 import { useNavigate } from "react-router";
-import { ModalComponent } from "./modal";
+import DrawingCard from "./DrawingCard";
 
 // import { socket } from '../Socket'
 export interface elementProps {
@@ -71,8 +71,7 @@ export default function Dashboard() {
   return (
     <div className="p-8">
       <p className={h2 + "my-4"}>Create a Drawing</p>
-      <ModalComponent isOpen={false}/>
-
+      <DrawingCard/>
       <div className="grid lg:grid-cols-3 grid-cols-1">
         {drawings &&
           drawings.map((e, index: number) => {

@@ -14,6 +14,7 @@
     "@chakra-ui/react": "^3.16.1",
     "@emotion/react": "^11.14.0",
     "@excalidraw/excalidraw": "^0.18.0",
+    "@headlessui/react": "^2.2.2",
     "@hookform/resolvers": "^4.1.3",
     "@radix-ui/react-alert-dialog": "^1.1.10",
     "@radix-ui/react-slot": "^1.2.0",
