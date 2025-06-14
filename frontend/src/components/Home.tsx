@@ -1,9 +1,6 @@
-"use client"
-
-import { useEffect, useState } from "react"
-import { NavLink } from "react-router"
-import { Axios } from "../ApiFormat"
-import Info from "./Info"
+"use client";
+import { NavLink } from "react-router";
+import Info from "./Info";
 import {
   ArrowRight,
   Brush,
@@ -18,58 +15,12 @@ import {
   Shield,
   Sparkles,
   Play,
-} from "lucide-react"
-
-export interface User {
-  _id: string
-  name: string
-  email: string
-  password: string
-  profilePic: string
-  PhoneNo: string
-  createdAt: Date
-}
+} from "lucide-react";
+import { useAuth } from "@/hooks/useAuth";
 
 export default function LandingPage() {
-  const [user, setUser] = useState<null | User>(null)
-  const [loading, setLoading] = useState<boolean>(true)
-
-  const refreshAccessToken = async () => {
-    try {
-      const response = await Axios.post("/api/refresh-access-token")
-      console.log(response)
-      console.log("token refreshed")
-    } catch (error) {
-      console.log(error)
-      console.log("error in refreshing token")
-    }
-  }
-
-  const getUser = async () => {
-    setLoading(true)
-    try {
-      const response = await Axios.get("/api/get-user")
-      console.log(response.data)
-      setUser(response.data.data)
-    } catch (error) {
-      console.log(error)
-      try {
-        await refreshAccessToken()
-        const response = await Axios.get("/api/get-user")
-        setUser(response.data.data)
-      } catch (error) {
-        console.log(error)
-      }
-    } finally {
-      setLoading(false)
-    }
-  }
-
-  useEffect(() => {
-    getUser()
-  }, [])
-
-  if (loading) {
+  const { user, authLoading } = useAuth();
+  if (authLoading) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-purple-50 via-indigo-50 to-blue-50">
         <div className="flex flex-col items-center space-y-4">
@@ -77,10 +28,12 @@ export default function LandingPage() {
             <Loader2 className="h-12 w-12 animate-spin text-indigo-600" />
             <div className="absolute inset-0 h-12 w-12 animate-ping rounded-full bg-indigo-400 opacity-20"></div>
           </div>
-          <p className="text-lg font-medium text-indigo-900">Preparing your creative canvas...</p>
+          <p className="text-lg font-medium text-indigo-900">
+            Preparing your creative canvas...
+          </p>
         </div>
       </div>
-    )
+    );
   }
 
   return (
@@ -106,7 +59,10 @@ export default function LandingPage() {
                 >
                   Dashboard
                 </NavLink>
-                <NavLink to="/gallery" className="text-indigo-600 hover:text-indigo-800 font-medium transition-colors">
+                <NavLink
+                  to="/gallery"
+                  className="text-indigo-600 hover:text-indigo-800 font-medium transition-colors"
+                >
                   Gallery
                 </NavLink>
                 <NavLink
@@ -118,7 +74,9 @@ export default function LandingPage() {
               </div>
               <div className="flex items-center space-x-3">
                 <div className="text-right hidden sm:block">
-                  <p className="text-sm text-indigo-900 font-medium">Welcome back,</p>
+                  <p className="text-sm text-indigo-900 font-medium">
+                    Welcome back,
+                  </p>
                   <p className="text-indigo-600 font-semibold">{user.name}</p>
                 </div>
                 {user.profilePic ? (
@@ -129,7 +87,9 @@ export default function LandingPage() {
                   />
                 ) : (
                   <div className="w-10 h-10 rounded-full bg-gradient-to-br from-indigo-400 to-purple-500 flex items-center justify-center shadow-lg">
-                    <span className="text-white font-medium text-sm">{user.name.substring(0, 2).toUpperCase()}</span>
+                    <span className="text-white font-medium text-sm">
+                      {user.name.substring(0, 2).toUpperCase()}
+                    </span>
                   </div>
                 )}
               </div>
@@ -165,7 +125,9 @@ export default function LandingPage() {
                 <Star className="h-4 w-4 text-yellow-400 fill-current" />
                 <Star className="h-4 w-4 text-yellow-400 fill-current" />
               </div>
-              <span className="text-sm text-indigo-700 font-medium">Loved by 50,000+ artists worldwide</span>
+              <span className="text-sm text-indigo-700 font-medium">
+                Loved by 50,000+ artists worldwide
+              </span>
             </div>
 
             <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold text-indigo-900 leading-tight">
@@ -175,8 +137,9 @@ export default function LandingPage() {
               </span>
             </h1>
             <p className="mt-6 text-xl text-indigo-800 max-w-lg leading-relaxed">
-              Transform your creative process with real-time collaborative drawing. Connect with artists globally, share
-              ideas instantly, and bring your imagination to life together.
+              Transform your creative process with real-time collaborative
+              drawing. Connect with artists globally, share ideas instantly, and
+              bring your imagination to life together.
             </p>
 
             <div className="mt-8 flex flex-wrap gap-4">
@@ -268,11 +231,13 @@ export default function LandingPage() {
       >
         <div className="text-center mb-16">
           <h2 className="text-4xl font-bold text-indigo-900 mb-4">
-            Everything You Need to Create <span className="text-purple-600">Together</span>
+            Everything You Need to Create{" "}
+            <span className="text-purple-600">Together</span>
           </h2>
           <p className="text-xl text-indigo-700 max-w-3xl mx-auto">
-            Professional-grade tools designed for seamless collaboration, whether you're sketching ideas or creating
-            detailed artwork with your team.
+            Professional-grade tools designed for seamless collaboration,
+            whether you're sketching ideas or creating detailed artwork with
+            your team.
           </p>
         </div>
 
@@ -281,10 +246,13 @@ export default function LandingPage() {
             <div className="w-14 h-14 bg-gradient-to-br from-indigo-500 to-indigo-600 rounded-xl flex items-center justify-center mb-6 shadow-lg">
               <Palette className="h-7 w-7 text-white" />
             </div>
-            <h3 className="text-2xl font-bold text-indigo-900 mb-4">Professional Drawing Tools</h3>
+            <h3 className="text-2xl font-bold text-indigo-900 mb-4">
+              Professional Drawing Tools
+            </h3>
             <p className="text-indigo-700 leading-relaxed">
-              Access a complete suite of drawing tools including brushes, shapes, layers, and advanced features. Perfect
-              for everything from quick sketches to detailed illustrations.
+              Access a complete suite of drawing tools including brushes,
+              shapes, layers, and advanced features. Perfect for everything from
+              quick sketches to detailed illustrations.
             </p>
           </div>
 
@@ -292,10 +260,13 @@ export default function LandingPage() {
             <div className="w-14 h-14 bg-gradient-to-br from-purple-500 to-purple-600 rounded-xl flex items-center justify-center mb-6 shadow-lg">
               <Users className="h-7 w-7 text-white" />
             </div>
-            <h3 className="text-2xl font-bold text-purple-900 mb-4">Real-time Collaboration</h3>
+            <h3 className="text-2xl font-bold text-purple-900 mb-4">
+              Real-time Collaboration
+            </h3>
             <p className="text-purple-700 leading-relaxed">
-              See every stroke as it happens. Collaborate with unlimited team members in real-time, with live cursors
-              and instant synchronization across all devices.
+              See every stroke as it happens. Collaborate with unlimited team
+              members in real-time, with live cursors and instant
+              synchronization across all devices.
             </p>
           </div>
 
@@ -303,10 +274,13 @@ export default function LandingPage() {
             <div className="w-14 h-14 bg-gradient-to-br from-indigo-500 to-purple-600 rounded-xl flex items-center justify-center mb-6 shadow-lg">
               <Globe className="h-7 w-7 text-white" />
             </div>
-            <h3 className="text-2xl font-bold text-indigo-900 mb-4">Share & Export Anywhere</h3>
+            <h3 className="text-2xl font-bold text-indigo-900 mb-4">
+              Share & Export Anywhere
+            </h3>
             <p className="text-indigo-700 leading-relaxed">
-              Share your creations instantly with custom links, export in multiple formats (PNG, SVG, PDF), or publish
-              to our community gallery for the world to see.
+              Share your creations instantly with custom links, export in
+              multiple formats (PNG, SVG, PDF), or publish to our community
+              gallery for the world to see.
             </p>
           </div>
         </div>
@@ -315,8 +289,12 @@ export default function LandingPage() {
       {/* Testimonials */}
       <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-20">
         <div className="text-center mb-16">
-          <h2 className="text-4xl font-bold text-indigo-900 mb-4">Loved by Creative Teams Worldwide</h2>
-          <p className="text-xl text-indigo-700">See how SocialDraw is transforming creative collaboration</p>
+          <h2 className="text-4xl font-bold text-indigo-900 mb-4">
+            Loved by Creative Teams Worldwide
+          </h2>
+          <p className="text-xl text-indigo-700">
+            See how SocialDraw is transforming creative collaboration
+          </p>
         </div>
 
         <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
@@ -327,16 +305,22 @@ export default function LandingPage() {
               </div>
               <div className="ml-4">
                 <h4 className="font-bold text-indigo-900">Jessica Davis</h4>
-                <p className="text-sm text-indigo-600">UI/UX Designer at TechCorp</p>
+                <p className="text-sm text-indigo-600">
+                  UI/UX Designer at TechCorp
+                </p>
               </div>
             </div>
             <p className="text-indigo-800 leading-relaxed">
-              "SocialDraw revolutionized our design process. Real-time collaboration with clients means faster
-              iterations and better results. It's like having everyone in the same room!"
+              "SocialDraw revolutionized our design process. Real-time
+              collaboration with clients means faster iterations and better
+              results. It's like having everyone in the same room!"
             </p>
             <div className="flex mt-4">
               {[...Array(5)].map((_, i) => (
-                <Star key={i} className="h-4 w-4 text-yellow-400 fill-current" />
+                <Star
+                  key={i}
+                  className="h-4 w-4 text-yellow-400 fill-current"
+                />
               ))}
             </div>
           </div>
@@ -348,16 +332,22 @@ export default function LandingPage() {
               </div>
               <div className="ml-4">
                 <h4 className="font-bold text-indigo-900">Marcus Thompson</h4>
-                <p className="text-sm text-indigo-600">Art Teacher, Creative Academy</p>
+                <p className="text-sm text-indigo-600">
+                  Art Teacher, Creative Academy
+                </p>
               </div>
             </div>
             <p className="text-indigo-800 leading-relaxed">
-              "My students absolutely love SocialDraw! It's intuitive enough for beginners but powerful enough for
-              advanced projects. The collaborative features make group work actually fun."
+              "My students absolutely love SocialDraw! It's intuitive enough for
+              beginners but powerful enough for advanced projects. The
+              collaborative features make group work actually fun."
             </p>
             <div className="flex mt-4">
               {[...Array(5)].map((_, i) => (
-                <Star key={i} className="h-4 w-4 text-yellow-400 fill-current" />
+                <Star
+                  key={i}
+                  className="h-4 w-4 text-yellow-400 fill-current"
+                />
               ))}
             </div>
           </div>
@@ -373,12 +363,17 @@ export default function LandingPage() {
               </div>
             </div>
             <p className="text-indigo-800 leading-relaxed">
-              "The community aspect is incredible! I've connected with artists from around the world, learned new
-              techniques, and even found collaboration opportunities. It's more than a tool—it's a platform."
+              "The community aspect is incredible! I've connected with artists
+              from around the world, learned new techniques, and even found
+              collaboration opportunities. It's more than a tool—it's a
+              platform."
             </p>
             <div className="flex mt-4">
               {[...Array(5)].map((_, i) => (
-                <Star key={i} className="h-4 w-4 text-yellow-400 fill-current" />
+                <Star
+                  key={i}
+                  className="h-4 w-4 text-yellow-400 fill-current"
+                />
               ))}
             </div>
           </div>
@@ -391,11 +386,13 @@ export default function LandingPage() {
           <div className="absolute inset-0 bg-[url('/placeholder.svg?height=400&width=800')] opacity-10"></div>
           <div className="relative z-10">
             <h2 className="text-4xl md:text-5xl font-bold text-white mb-6">
-              Ready to Create Something <span className="text-yellow-300">Amazing</span>?
+              Ready to Create Something{" "}
+              <span className="text-yellow-300">Amazing</span>?
             </h2>
             <p className="text-xl text-indigo-100 max-w-3xl mx-auto mb-10 leading-relaxed">
-              Join thousands of artists, designers, and creative teams who are already using SocialDraw to bring their
-              ideas to life. Start your creative journey today—completely free!
+              Join thousands of artists, designers, and creative teams who are
+              already using SocialDraw to bring their ideas to life. Start your
+              creative journey today—completely free!
             </p>
             <div className="flex flex-wrap justify-center gap-6">
               {user ? (
@@ -442,8 +439,9 @@ export default function LandingPage() {
               </span>
             </div>
             <p className="text-indigo-700 leading-relaxed mb-6 max-w-md">
-              Empowering artists and creative teams worldwide with the most intuitive collaborative drawing platform.
-              Create, share, and inspire together.
+              Empowering artists and creative teams worldwide with the most
+              intuitive collaborative drawing platform. Create, share, and
+              inspire together.
             </p>
             <div className="flex space-x-4">
               <a
@@ -471,22 +469,34 @@ export default function LandingPage() {
             <h4 className="font-bold text-indigo-900 mb-6">Product</h4>
             <ul className="space-y-3">
               <li>
-                <a href="#" className="text-indigo-600 hover:text-indigo-800 transition-colors">
+                <a
+                  href="#"
+                  className="text-indigo-600 hover:text-indigo-800 transition-colors"
+                >
                   Features
                 </a>
               </li>
               <li>
-                <a href="#" className="text-indigo-600 hover:text-indigo-800 transition-colors">
+                <a
+                  href="#"
+                  className="text-indigo-600 hover:text-indigo-800 transition-colors"
+                >
                   Pricing
                 </a>
               </li>
               <li>
-                <a href="#" className="text-indigo-600 hover:text-indigo-800 transition-colors">
+                <a
+                  href="#"
+                  className="text-indigo-600 hover:text-indigo-800 transition-colors"
+                >
                   Templates
                 </a>
               </li>
               <li>
-                <a href="#" className="text-indigo-600 hover:text-indigo-800 transition-colors">
+                <a
+                  href="#"
+                  className="text-indigo-600 hover:text-indigo-800 transition-colors"
+                >
                   Integrations
                 </a>
               </li>
@@ -497,22 +507,34 @@ export default function LandingPage() {
             <h4 className="font-bold text-indigo-900 mb-6">Resources</h4>
             <ul className="space-y-3">
               <li>
-                <a href="#" className="text-indigo-600 hover:text-indigo-800 transition-colors">
+                <a
+                  href="#"
+                  className="text-indigo-600 hover:text-indigo-800 transition-colors"
+                >
                   Help Center
                 </a>
               </li>
               <li>
-                <a href="#" className="text-indigo-600 hover:text-indigo-800 transition-colors">
+                <a
+                  href="#"
+                  className="text-indigo-600 hover:text-indigo-800 transition-colors"
+                >
                   Tutorials
                 </a>
               </li>
               <li>
-                <a href="#" className="text-indigo-600 hover:text-indigo-800 transition-colors">
+                <a
+                  href="#"
+                  className="text-indigo-600 hover:text-indigo-800 transition-colors"
+                >
                   Community
                 </a>
               </li>
               <li>
-                <a href="#" className="text-indigo-600 hover:text-indigo-800 transition-colors">
+                <a
+                  href="#"
+                  className="text-indigo-600 hover:text-indigo-800 transition-colors"
+                >
                   Blog
                 </a>
               </li>
@@ -523,22 +545,34 @@ export default function LandingPage() {
             <h4 className="font-bold text-indigo-900 mb-6">Company</h4>
             <ul className="space-y-3">
               <li>
-                <a href="#" className="text-indigo-600 hover:text-indigo-800 transition-colors">
+                <a
+                  href="#"
+                  className="text-indigo-600 hover:text-indigo-800 transition-colors"
+                >
                   About Us
                 </a>
               </li>
               <li>
-                <a href="#" className="text-indigo-600 hover:text-indigo-800 transition-colors">
+                <a
+                  href="#"
+                  className="text-indigo-600 hover:text-indigo-800 transition-colors"
+                >
                   Careers
                 </a>
               </li>
               <li>
-                <a href="#" className="text-indigo-600 hover:text-indigo-800 transition-colors">
+                <a
+                  href="#"
+                  className="text-indigo-600 hover:text-indigo-800 transition-colors"
+                >
                   Privacy
                 </a>
               </li>
               <li>
-                <a href="#" className="text-indigo-600 hover:text-indigo-800 transition-colors">
+                <a
+                  href="#"
+                  className="text-indigo-600 hover:text-indigo-800 transition-colors"
+                >
                   Terms
                 </a>
               </li>
@@ -547,12 +581,15 @@ export default function LandingPage() {
         </div>
 
         <div className="border-t border-indigo-100 mt-12 pt-8 flex flex-col md:flex-row justify-between items-center">
-          <p className="text-indigo-600 text-sm">&copy; {new Date().getFullYear()} SocialDraw. All rights reserved.</p>
+          <p className="text-indigo-600 text-sm">
+            &copy; {new Date().getFullYear()} SocialDraw. All rights reserved.
+          </p>
           <p className="text-indigo-500 text-sm mt-4 md:mt-0">
-            Made with <Heart className="h-4 w-4 inline text-red-500" /> for the creative community
+            Made with <Heart className="h-4 w-4 inline text-red-500" /> for the
+            creative community
           </p>
         </div>
       </footer>
     </div>
-  )
+  );
 }

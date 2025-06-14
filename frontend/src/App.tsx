@@ -10,54 +10,66 @@ import SharedDraw from "./components/SharedDraw";
 function App() {
   return (
     <>
-    <BrowserRouter>
-      <Routes>
-        <Route path="/" element={
-         <LandingPage/>
-        } />
-      </Routes>
-      <Routes>
-        <Route path="/uploadFile" element={<FileUpload/>} />
-      </Routes>
-      <Routes>
-        <Route path="/login" element={
-          <div>
-            <Login/>
-          </div>
-        } />
-      </Routes>
-      <Routes>
-        <Route path="/signup" element={
-          <div>
-            <SignUp/>
-          </div>
-        } />
-      </Routes>
-      <Routes>
-        <Route path="/draw" element={
-          <div>
-            <Draw/>
-          </div>
-        } />
-      </Routes>
-      <Routes>
-        <Route path="/dashboard" element={
-          <div>
-            <Dashboard/>
-          </div>
-        } />
-      </Routes>
-      <Routes>
-        <Route path="/draw/shared" element={
-          <div>
-            <SharedDraw/>
-          </div>
-        } />
-      </Routes>
-     
+      <BrowserRouter>
+        <Routes>
+          <Route path="/" element={<LandingPage />} />
+        </Routes>
+        <Routes>
+          <Route path="/uploadFile" element={<FileUpload />} />
+        </Routes>
+        <Routes>
+          <Route
+            path="/login"
+            element={
+              <div>
+                <Login />
+              </div>
+            }
+          />
+        </Routes>
+        <Routes>
+          <Route
+            path="/signup"
+            element={
+              <div>
+                <SignUp />
+              </div>
+            }
+          />
+        </Routes>
+        <Routes>
+          <Route
+            path="/draw"
+            element={
+              <div>
+                <Draw />
+              </div>
+            }
+          />
+        </Routes>
+        <Routes>
+          <Route
+            path="/dashboard"
+            element={
+              <div>
+                <Dashboard />
+              </div>
+            }
+          />
+        </Routes>
+        <Routes>
+          <Route
+            path="/draw/shared"
+            element={
+              <div>
+                <SharedDraw />
+              </div>
+            }
+          />
+        </Routes>
       </BrowserRouter>
     </>
-  )
+  );
 }
 
-export default App
+export default App;
