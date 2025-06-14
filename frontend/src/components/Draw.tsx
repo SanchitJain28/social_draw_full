@@ -564,7 +564,7 @@ const elementsAreEqual = (
           navigate("/dashboard");
         }}
         clearCanvasForAll={clearCanvasForAll}
-        shareLink={`localhost:5173/draw/shared?id=${drawingId}`}
+        shareLink={`https://socialdraw.netlify.app/draw/shared?id=${drawingId}`}
         setShowDeleteConfirm={setShowDeleteConfirm}
       />
       {/* Canvas */}
