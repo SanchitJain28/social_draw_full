@@ -1,40 +1,47 @@
-"use client"
 
-import { useState, useEffect, useRef } from "react" // Added useRef
-import { ArrowLeft, Loader2, CheckCircle, Clock, Wifi, WifiOff, Users, Save, Trash2, Share2, X } from "lucide-react"
-import { deleteCookie, getCookie, setCookie } from "@/utils/AddCookie"
+import { useState, useEffect, useRef } from "react";
+import {
+  ArrowLeft,
+  Loader2,
+  CheckCircle,
+  Clock,
+  Wifi,
+  WifiOff,
+  Users,
+  Save,
+  Trash2,
+  Share2,
+  X,
+} from "lucide-react";
+import { motion, AnimatePresence } from "motion/react";
+import { deleteCookie, getCookie, setCookie } from "@/utils/AddCookie";
 import { CollaborativeUser } from "@/types/Types";
-// Helper function to format last saved time
-const formatLastSaved = (date: Date) => {
-  const now = new Date()
-  const diffMinutes = Math.floor((now.getTime() - date.getTime()) / (1000 * 60))
 
-  if (diffMinutes === 0) {
-    return "just now"
-  } else if (diffMinutes === 1) {
-    return "1 minute ago"
-  } else if (diffMinutes < 60) {
-    return `${diffMinutes} minutes ago`
-  } else if (diffMinutes < 24 * 60) {
-    const diffHours = Math.floor(diffMinutes / 60)
-    return `${diffHours} hour${diffHours > 1 ? "s" : ""} ago`
-  } else {
-    const diffDays = Math.floor(diffMinutes / (24 * 60))
-    return `${diffDays} day${diffDays > 1 ? "s" : ""} ago`
+const formatLastSaved = (date: Date) => {
+  const now = new Date();
+  const diffMinutes = Math.floor((now.getTime() - date.getTime()) / (1000 * 60));
+  if (diffMinutes === 0) return "just now";
+  if (diffMinutes === 1) return "1 minute ago";
+  if (diffMinutes < 60) return `${diffMinutes} minutes ago`;
+  if (diffMinutes < 24 * 60) {
+    const diffHours = Math.floor(diffMinutes / 60);
+    return `${diffHours} hour${diffHours > 1 ? "s" : ""} ago`;
   }
-}
+  const diffDays = Math.floor(diffMinutes / (24 * 60));
+  return `${diffDays} day${diffDays > 1 ? "s" : ""} ago`;
+};
 
 interface CollaborationHeaderProps {
-  onCollaborateStart: (status: boolean) => void
-  navigate: (path: string) => void
-  saving: boolean
-  lastSaved: Date | null
-  isConnected: boolean
-  connectedUsers: CollaborativeUser[]
-  clearCanvasForAll: () => void
-  isDeletable?: boolean
-  setShowDeleteConfirm?: (show: boolean) => void
-  shareLink: string
+  onCollaborateStart: (status: boolean) => void;
+  navigate: (path: string) => void;
+  saving: boolean;
+  lastSaved: Date | null;
+  isConnected: boolean;
+  connectedUsers: CollaborativeUser[];
+  clearCanvasForAll: () => void;
+  isDeletable?: boolean;
+  setShowDeleteConfirm?: (show: boolean) => void;
+  shareLink: string;
 }
 
 export default function CustomHeader({
@@ -44,272 +51,323 @@ export default function CustomHeader({
   lastSaved = new Date(),
   isConnected = true,
   connectedUsers = [
-    { id: "1", name: "Alice", color: "#FF5733" ,isVerified:false,isAdmin:false,socketId:"" },
-    { id: "2", name: "Bob", color: "#33FF57",isVerified:false ,isAdmin:false,socketId:""},
-    { id: "3", name: "Charlie", color: "#3357FF" ,isVerified:false,isAdmin:false,socketId:""},
-    { id: "4", name: "Diana", color: "#FF33F7",isVerified:false ,isAdmin:false,socketId:""},
+    { id: "1", name: "Alice", color: "#FF5733", isVerified: false, isAdmin: false, socketId: "" },
+    { id: "2", name: "Bob", color: "#33FF57", isVerified: false, isAdmin: false, socketId: "" },
+    { id: "3", name: "Charlie", color: "#3357FF", isVerified: false, isAdmin: false, socketId: "" },
+    { id: "4", name: "Diana", color: "#FF33F7", isVerified: false, isAdmin: false, socketId: "" },
   ],
   clearCanvasForAll = () => alert("Canvas cleared!"),
   setShowDeleteConfirm = (show: boolean) => alert(`Show delete confirm: ${show}`),
-  shareLink = "https://v0.dev/drawing/example-id", // Default share link
+  shareLink = "https://v0.dev/drawing/example-id",
   onCollaborateStart,
 }: CollaborationHeaderProps) {
-  const [showCollaborateModal, setShowCollaborateModal] = useState(false)
-  const [copySuccess, setCopySuccess] = useState("")
-  const [isCollabrating, setIsCollabrating] = useState(false)
-  const [showUsersList, setShowUsersList] = useState(false) // New state for user list visibility
-  const usersListRef = useRef<HTMLDivElement>(null) // New ref for click outside detection
+  const [showCollaborateModal, setShowCollaborateModal] = useState(false);
+  const [copySuccess, setCopySuccess] = useState("");
+  const [isCollabrating, setIsCollabrating] = useState(false);
+  const [showUsersList, setShowUsersList] = useState(false);
+  const usersListRef = useRef<HTMLDivElement>(null);
 
   const handleCopyLink = async () => {
     try {
-      await navigator.clipboard.writeText(shareLink)
-      setCopySuccess("Copied!")
+      await navigator.clipboard.writeText(shareLink);
+      setCopySuccess("Copied!");
     } catch (err) {
-      setCopySuccess("Failed to copy!")
-      console.error("Failed to copy: ", err)
+      setCopySuccess("Failed to copy!");
+      console.error("Failed to copy: ", err);
     }
-  }
+  };
 
   useEffect(() => {
-    const isCollab = getCookie("collaborating")
+    const isCollab = getCookie("collaborating");
     if (isCollab) {
-      setIsCollabrating(true)
-      onCollaborateStart?.(true)
+      setIsCollabrating(true);
+      onCollaborateStart?.(true);
     }
-  }, [])
+    // eslint-disable-next-line
+  }, []);
 
-  // Handle copy message reset
   useEffect(() => {
     if (copySuccess) {
       const timer = setTimeout(() => {
-        setCopySuccess("")
-      }, 2000)
-      return () => clearTimeout(timer)
+        setCopySuccess("");
+      }, 2000);
+      return () => clearTimeout(timer);
     }
-  }, [copySuccess])
+  }, [copySuccess]);
 
-  // Handle click outside to close user list
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
       if (usersListRef.current && !usersListRef.current.contains(event.target as Node)) {
-        setShowUsersList(false)
+        setShowUsersList(false);
       }
-    }
-
-    document.addEventListener("mousedown", handleClickOutside)
-    return () => {
-      document.removeEventListener("mousedown", handleClickOutside)
-    }
-  }, [usersListRef])
+    };
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, [usersListRef]);
 
   return (
-    <header className="bg-slate-800 border-b border-slate-700 px-4 py-3 flex items-center justify-between">
-      <div className="flex items-center space-x-4">
-        <button
+    <header className="bg-gradient-to-bl from-slate-800 via-slate-900 to-slate-800 border-b border-slate-700 px-6 py-4 flex items-center justify-between shadow-xl relative z-40">
+      {/* Left section: Navigation + Title + Save Status */}
+      <div className="flex items-center gap-5 min-w-0">
+        <motion.button
+          className="p-2 text-slate-400 hover:text-slate-100 bg-slate-800/70 hover:bg-blue-600/80 rounded-xl shadow transition-colors duration-200"
+          whileHover={{ scale: 1.12 }}
           onClick={() => navigate("/dashboard")}
-          className="p-2 text-slate-400 hover:text-slate-200 hover:bg-slate-700 rounded-lg transition-colors"
           title="Back to dashboard"
         >
           <ArrowLeft className="h-5 w-5" />
-        </button>
-        <div>
-          <h1 className="text-lg font-semibold text-slate-200 truncate max-w-xs sm:max-w-md">{"Untitled Drawing"}</h1>
-          <div className="flex items-center space-x-2 text-sm text-slate-400">
+        </motion.button>
+        <motion.div
+          initial={{ opacity: 0, x: -18 }}
+          animate={{ opacity: 1, x: 0 }}
+          transition={{ delay: 0.03, duration: 0.45, type: "spring", stiffness: 70 }}
+          className="pr-3 md:pr-8 min-w-0"
+        >
+          <h1 className="text-2xl font-semibold text-white whitespace-nowrap overflow-ellipsis max-w-[20ch] tracking-tight mb-0.5">
+            Untitled Drawing
+          </h1>
+          <div className="flex items-center gap-2 text-sm text-slate-400 font-medium">
             {saving ? (
-              <div className="flex items-center space-x-1">
-                <Loader2 className="h-3 w-3 animate-spin" />
-                <span>Saving...</span>
-              </div>
+              <span className="flex items-center gap-1">
+                <Loader2 className="h-4 w-4 animate-spin" />
+                Saving...
+              </span>
             ) : lastSaved ? (
-              <div className="flex items-center space-x-1">
-                <CheckCircle className="h-3 w-3 text-green-400" />
-                <span>Saved {formatLastSaved(lastSaved)}</span>
-              </div>
+              <span className="flex items-center gap-1">
+                <CheckCircle className="h-4 w-4 text-emerald-400" />
+                Saved {formatLastSaved(lastSaved)}
+              </span>
             ) : (
-              <div className="flex items-center space-x-1">
-                <Clock className="h-3 w-3" />
-                <span>Auto-save enabled</span>
-              </div>
+              <span className="flex items-center gap-1">
+                <Clock className="h-4 w-4" />
+                Auto-save enabled
+              </span>
             )}
           </div>
-        </div>
+        </motion.div>
       </div>
 
-      <div className="flex items-center space-x-3">
-        {/* Collaboration Status and User List */}
+      {/* Middle: Collaboration/Users */}
+      <div className="flex items-center gap-2 md:gap-4">
+        {/* User status/users list button */}
         <div className="relative" ref={usersListRef}>
-          {" "}
-          {/* Added relative positioning and ref */}
-          <button
-            onClick={() => setShowUsersList(!showUsersList)}
-            className="flex items-center space-x-2 p-2 rounded-lg hover:bg-slate-700 transition-colors cursor-pointer"
+          <motion.button
+            whileTap={{ scale: 0.97 }}
+            whileHover={{ scale: 1.05 }}
+            onClick={() => setShowUsersList((prev) => !prev)}
+            className="flex items-center gap-2 px-3 py-2 rounded-xl bg-slate-800/60 hover:bg-slate-800 backdrop-blur text-slate-300 shadow border border-slate-700/50 hover:border-blue-600 cursor-pointer transition duration-150"
             title="View connected users"
+            tabIndex={0}
           >
-            <div className="flex items-center space-x-1">
-              {isConnected ? <Wifi className="h-4 w-4 text-green-400" /> : <WifiOff className="h-4 w-4 text-red-400" />}
-              <span className={`text-sm ${isConnected ? "text-green-400" : "text-red-400"}`}>
+            <div className="flex items-center gap-1">
+              {isConnected ? (
+                <Wifi className="h-4 w-4 text-emerald-400 animate-pulse" />
+              ) : (
+                <WifiOff className="h-4 w-4 text-red-500" />
+              )}
+              <span className={`text-sm font-medium ${isConnected ? "text-emerald-400" : "text-red-400"}`}>
                 {isConnected ? "Live" : "Offline"}
               </span>
             </div>
-
-            {connectedUsers.length > 0 && (
-              <div className="flex items-center space-x-1">
-                <Users className="h-4 w-4 text-purple-400" /> {/* Changed indigo to purple */}
-                <span className="text-sm text-purple-400">{connectedUsers.length}</span>
-                <div className="flex -space-x-1">
-                  {connectedUsers.map((user) => (
-                    <div
-                      key={user.socketId}
-                      className="w-6 h-6 rounded-full border-2 border-slate-800 flex items-center justify-center text-xs font-medium text-white"
-                      style={{ backgroundColor: user.color }}
-                      title={user.name}
-                    >
-                      {user.name?.charAt(0) || "U"}
-                    </div>
-                  ))}
-                  {connectedUsers.length > 3 && (
-                    <div className="w-6 h-6 rounded-full border-2 border-slate-800 bg-slate-600 flex items-center justify-center text-xs text-white">
-                      +{connectedUsers.length - 3}
-                    </div>
-                  )}
-                </div>
-              </div>
-            )}
-          </button>
-          {showUsersList && connectedUsers.length > 0 && (
-            <div className="absolute top-full right-0 mt-2 w-64 bg-slate-800 border border-slate-700 rounded-lg shadow-lg z-50 p-4">
-              <h3 className="text-slate-200 font-semibold mb-2">Connected Users</h3>
-              <ul className="space-y-2">
-                {connectedUsers.map((user) => (
-                  <li key={user.socketId} className="flex items-center space-x-3">
-                    <div
-                      className="w-8 h-8 rounded-full border-2 border-slate-700 flex items-center justify-center text-sm font-medium text-white"
-                      style={{ backgroundColor: user.color }}
-                      title={user.name ? user.name + (user.isVerified ? "(Verified)" : "(Un-verified)") : ""}
-                    >
-                      {user.name?.charAt(0) || "U"}
-                    </div>
-                    <span className="text-slate-300">{user.name|| `User ${user.id}` }</span>
-                    <span className="text-slate-300">{user.isVerified ?"VERIFIED": user.isAdmin ? "ADMIN":"" }</span>
-                  </li>
+            <div className="flex items-center gap-1">
+              <Users className="h-4 w-4 text-blue-400" />
+              <span className="text-sm text-blue-300 font-medium">{connectedUsers.length}</span>
+              <div className="flex -space-x-2">
+                {connectedUsers.slice(0, 3).map((user, i) => (
+                  <motion.div
+                    key={user.socketId || user.id + i}
+                    initial={{ scale: 0.7, opacity: 0 }}
+                    animate={{ scale: 1, opacity: 1 }}
+                    transition={{ duration: 0.22 + i * 0.08, type: "spring", stiffness: 160 }}
+                    className="w-7 h-7 rounded-full border-2 border-slate-900 flex items-center justify-center text-xs font-semibold text-white shadow"
+                    style={{ backgroundColor: user.color }}
+                    title={user.name}
+                  >
+                    {user.name?.charAt(0) || "U"}
+                  </motion.div>
                 ))}
-              </ul>
+                {connectedUsers.length > 3 && (
+                  <div className="w-7 h-7 rounded-full border-2 border-slate-900 bg-slate-600 flex items-center justify-center text-xs text-white font-semibold">
+                    +{connectedUsers.length - 3}
+                  </div>
+                )}
+              </div>
             </div>
-          )}
+          </motion.button>
+          {/* User list dropdown w/ animation */}
+          <AnimatePresence>
+            {showUsersList && connectedUsers.length > 0 && (
+              <motion.div
+                key="dropdown"
+                initial={{ opacity: 0, y: -14, scale: 0.95 }}
+                animate={{ opacity: 1, y: 0, scale: 1 }}
+                exit={{ opacity: 0, y: -8, scale: 0.96 }}
+                transition={{ duration: 0.19, type: "spring", damping: 16, stiffness: 140 }}
+                className="absolute top-full right-0 mt-3 w-72 md:w-80 bg-slate-800/95 border border-slate-600 rounded-xl shadow-2xl z-40 p-4 backdrop-blur"
+              >
+                <h3 className="text-slate-200 font-bold text-base mb-3">Connected Users</h3>
+                <ul className="space-y-2">
+                  {connectedUsers.map((user) => (
+                    <li key={user.socketId || user.id} className="flex items-center gap-3 py-1">
+                      <div
+                        className="w-9 h-9 rounded-full border-2 border-slate-700 flex items-center justify-center text-sm font-medium text-white shadow"
+                        style={{ backgroundColor: user.color }}
+                        title={user.name ? user.name + (user.isVerified ? " (Verified)" : user.isAdmin ? " (Admin)" : "") : ""}
+                      >
+                        {user.name?.charAt(0) || "U"}
+                      </div>
+                      <span className="flex-1 truncate text-slate-200 font-semibold">{user.name || `User ${user.id}`}</span>
+                      <span className={`text-xs font-medium ${user.isVerified ? "text-green-400" : user.isAdmin ? "text-pink-400" : ""}`}>
+                        {user.isVerified ? "VERIFIED" : user.isAdmin ? "ADMIN" : ""}
+                      </span>
+                    </li>
+                  ))}
+                </ul>
+              </motion.div>
+            )}
+          </AnimatePresence>
         </div>
-
-        {/* Save Status Indicator */}
-        <div className="hidden sm:flex items-center space-x-2">
+        {/* Save indicator (visible md+ screens) */}
+        <div className="hidden md:flex items-center gap-2 px-3 py-2 rounded-xl bg-slate-800/60 border border-slate-700/60 shadow text-sm font-semibold min-w-[96px] justify-center select-none">
           {saving ? (
-            <div className="flex items-center space-x-2 text-amber-400">
+            <span className="flex items-center gap-2 text-yellow-300">
               <Save className="h-4 w-4 animate-pulse" />
-              <span className="text-sm font-medium">Saving</span>
-            </div>
+              Saving
+            </span>
           ) : (
-            <div className="flex items-center space-x-2 text-green-400">
+            <span className="flex items-center gap-2 text-lime-300">
               <CheckCircle className="h-4 w-4" />
-              <span className="text-sm font-medium">Saved</span>
-            </div>
+              Saved
+            </span>
           )}
         </div>
+      </div>
 
-        {/* Collaborate Button */}
-        <button
+      {/* Right section: Collaborate - Clear - Delete */}
+      <div className="flex items-center gap-2 md:gap-3">
+        {/* Collaborate button */}
+        <motion.button
+          whileHover={{ scale: 1.07 }}
+          whileTap={{ scale: 0.96 }}
           onClick={() => setShowCollaborateModal(true)}
-          className="p-2 text-slate-400 hover:text-blue-400 hover:bg-slate-700 rounded-lg transition-colors flex items-center space-x-1"
+          className="p-2 md:px-4 md:py-2 text-slate-200 bg-gradient-to-br from-blue-700 via-sky-700 to-blue-600 hover:from-blue-800 hover:to-blue-700 rounded-xl font-medium flex items-center gap-2 shadow transition duration-150"
           title="Collaborate on this drawing"
         >
           <Share2 className="h-5 w-5" />
-          <span className="hidden sm:inline">Collaborate</span>
-        </button>
+          <span className="hidden md:inline">Collaborate</span>
+        </motion.button>
 
-        {/* Clear Canvas Button */}
-        <button
+        {/* Clear All */}
+        <motion.button
+          whileHover={{ scale: 1.06 }}
+          className="p-2 md:px-3 md:py-2 text-yellow-300 bg-slate-800/70 hover:bg-yellow-500/10 rounded-xl font-semibold flex items-center gap-2 shadow transition duration-150 border border-yellow-300/20"
           onClick={clearCanvasForAll}
-          className="p-2 text-slate-400 hover:text-yellow-400 hover:bg-slate-700 rounded-lg transition-colors"
           title="Clear canvas for everyone"
         >
           Clear All
-        </button>
+        </motion.button>
 
         {/* Delete Button */}
         {isDeletable && (
-          <button
+          <motion.button
+            whileHover={{ scale: 1.06 }}
             onClick={() => setShowDeleteConfirm(true)}
-            className="p-2 text-slate-400 hover:text-red-400 hover:bg-slate-700 rounded-lg transition-colors"
+            className="p-2 md:px-3 md:py-2 text-rose-400 bg-slate-800/60 hover:bg-rose-600/20 rounded-xl font-semibold flex items-center gap-2 shadow transition duration-150 border border-rose-400/20"
             title="Delete drawing"
           >
             <Trash2 className="h-5 w-5" />
-          </button>
+          </motion.button>
         )}
       </div>
 
-      {showCollaborateModal && (
-        <div className="fixed inset-0 bg-opacity-75 flex items-center justify-center z-50 p-4">
-          <div className="bg-slate-800 rounded-lg shadow-xl p-6 w-full max-w-md relative border border-slate-700">
-            <button
-              onClick={() => setShowCollaborateModal(false)}
-              className="absolute top-3 right-3 text-slate-400 hover:text-slate-200 p-1 rounded-full hover:bg-slate-700 transition-colors"
-              title="Close"
+      {/* Collaborate Modal */}
+      <AnimatePresence>
+        {showCollaborateModal && (
+          <motion.div
+            key="backdrop"
+            className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4 backdrop-blur-sm"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+          >
+            <motion.div
+              key="modal"
+              initial={{ y: -36, scale: 0.98, opacity: 0 }}
+              animate={{ y: 0, scale: 1, opacity: 1 }}
+              exit={{ y: -20, opacity: 0, scale: 0.98 }}
+              transition={{ type: "spring", stiffness: 150, damping: 18, duration: 0.38 }}
+              className="bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 rounded-2xl shadow-2xl p-7 w-full max-w-md border border-slate-700 relative"
             >
-              <X className="h-5 w-5" />
-            </button>
-            <h2 className="text-xl font-bold text-slate-100 mb-4">Collaborate on this drawing</h2>
-            <p className="text-slate-300 mb-6">Copy this link and share with others to collaborate on this drawing.</p>
-            <div className="flex items-center space-x-2 mb-4">
-              <input
-                type="text"
-                readOnly
-                value={shareLink}
-                className="flex-1 p-2 border border-slate-600 rounded-md bg-slate-700 text-slate-200 focus:outline-none focus:ring-2 focus:ring-blue-500"
-              />
               <button
-                onClick={handleCopyLink}
-                className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors text-sm font-medium"
+                onClick={() => setShowCollaborateModal(false)}
+                className="absolute top-3 right-3 text-slate-400 hover:text-white p-2 rounded-full hover:bg-slate-700/80 transition-colors"
+                title="Close"
               >
-                {copySuccess || "Copy Link"}
+                <X className="h-5 w-5" />
               </button>
-            </div>
-            <div className="">
-              {isCollabrating ? (
-                <>
-                  <button
+              <h2 className="text-xl md:text-2xl font-extrabold text-white mb-3 text-center tracking-tight">Collaborate</h2>
+              <p className="text-slate-300 mb-5 text-center">Copy this link and share with others to collaborate on this drawing.</p>
+              <motion.div
+                className="flex items-center gap-2 mb-4"
+                initial={{ opacity: 0, scale: 0.98 }}
+                animate={{ opacity: 1, scale: 1 }}
+                transition={{ delay: 0.19, duration: 0.29 }}
+              >
+                <input
+                  type="text"
+                  readOnly
+                  value={shareLink}
+                  className="flex-1 p-2 border border-slate-600 rounded-md bg-slate-700 text-slate-200 focus:outline-none focus:ring-2 focus:ring-blue-500 font-mono text-xs md:text-sm"
+                />
+                <motion.button
+                  whileTap={{ scale: 0.93 }}
+                  whileHover={{ scale: 1.03 }}
+                  onClick={handleCopyLink}
+                  className="px-4 py-2 bg-blue-700 hover:bg-blue-800 text-white rounded-md font-semibold text-xs transition shadow"
+                >
+                  {copySuccess || "Copy Link"}
+                </motion.button>
+              </motion.div>
+              <div className="flex justify-center">
+                {isCollabrating ? (
+                  <motion.button
+                    whileTap={{ scale: 0.96 }}
+                    whileHover={{ scale: 1.03 }}
                     onClick={() => {
-                      onCollaborateStart(false) // <- Notify parent that collaboration started
-                      deleteCookie("collaborating") // Remove cookie for collaboration
-                      setIsCollabrating(false)
-                      setShowCollaborateModal(false)
+                      onCollaborateStart(false);
+                      deleteCookie("collaborating");
+                      setIsCollabrating(false);
+                      setShowCollaborateModal(false);
                     }}
-                    className="px-4 py-2 bg-red-600 text-white rounded-md hover:bg-red-600 transition-colors text-sm font-medium"
+                    className="px-5 py-2 bg-red-600 text-white rounded-md font-bold hover:bg-red-700 transition shadow-sm"
                   >
-                    {"Stop session"}
-                  </button>
-                </>
-              ) : (
-                <>
-                  <button
+                    Stop session
+                  </motion.button>
+                ) : (
+                  <motion.button
+                    whileTap={{ scale: 0.96 }}
+                    whileHover={{ scale: 1.03 }}
                     onClick={() => {
-                      console.log("isCoolab", isCollabrating)
-                      setIsCollabrating(true)
-                      onCollaborateStart(true) // <- Notify parent that collaboration started
-                      setShowCollaborateModal(false)
-                      setCookie("collaborating", true, 7) // Set cookie for collaboration
+                      setIsCollabrating(true);
+                      onCollaborateStart(true);
+                      setShowCollaborateModal(false);
+                      setCookie("collaborating", true, 7);
                     }}
-                    className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors text-sm font-medium"
+                    className="px-5 py-2 bg-blue-700 text-white rounded-md font-bold hover:bg-blue-800 transition shadow-sm"
                   >
-                    {"Start session"}
-                  </button>
-                </>
+                    Start session
+                  </motion.button>
+                )}
+              </div>
+              {copySuccess && (
+                <p className={`text-sm text-center mt-4 ${copySuccess === "Copied!" ? "text-green-400" : "text-red-400"}`}>
+                  {copySuccess}
+                </p>
               )}
-            </div>
-            {copySuccess && (
-              <p className={`text-sm text-center ${copySuccess === "Copied!" ? "text-green-400" : "text-red-400"}`}>
-                {copySuccess}
-              </p>
-            )}
-          </div>
-        </div>
-      )}
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </header>
-  )
+  );
 }

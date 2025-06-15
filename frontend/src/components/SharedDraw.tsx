@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState, useRef } from "react";
+import { useEffect, useState, useRef, useCallback } from "react";
 import { Excalidraw } from "@excalidraw/excalidraw";
 import type {
   ExcalidrawInitialDataState,
@@ -58,7 +58,7 @@ export default function SharedDraw() {
   const [isReceivingUpdate, setIsReceivingUpdate] = useState<boolean>(false);
   const [isThereAdmin, setIsThereAdmin] = useState<boolean>(true);
 
-  const debouncedSceneElements = useDebounce(sceneElements, 600);
+  const debouncedSceneElements = useDebounce(sceneElements, 1000);
 
   //auth handling
   const { user, authLoading } = useAuth();
@@ -69,23 +69,29 @@ export default function SharedDraw() {
   // Generate consistent color for user - FIXED: Remove from dependencies
 
   // FIX: Helper function to compare element arrays - Remove from dependencies
-  const elementsAreEqual = (
+   const elementsAreEqual = useCallback((
     elements1: readonly ExcalidrawElement[] | null | undefined,
     elements2: readonly ExcalidrawElement[] | null | undefined
   ): boolean => {
     if (elements1 === elements2) return true;
-    if (!elements1 || !elements2) return elements1 === elements2;
+    if (!elements1 || !elements2) return false;
     if (elements1.length !== elements2.length) return false;
 
-    return elements1.every((el1, index) => {
-      const el2 = elements2[index];
-      return (
-        el1.id === el2.id &&
-        el1.versionNonce === el2.versionNonce &&
-        el1.updated === el2.updated
-      );
-    });
-  };
+    // Create maps for efficient lookup
+    const map1 = new Map(elements1.map(el => [el.id, el]));
+    const map2 = new Map(elements2.map(el => [el.id, el]));
+
+    // Check if all elements match
+    for (const [id, el1] of map1) {
+      const el2 = map2.get(id);
+      if (!el2 || el1.versionNonce !== el2.versionNonce) {
+        return false;
+      }
+    }
+
+    return true;
+  }, []);
+
 
   // Update scene with retry mechanism - FIXED: Remove from dependencies
   const updateSceneWithRetry = (elements: readonly ExcalidrawElement[]) => {
