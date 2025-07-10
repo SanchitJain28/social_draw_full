@@ -19,7 +19,7 @@ const io = new Server(httpServer, {
   },
 });
 
-app.options("*", cors());
+// app.options("*", cors());
 
 app.use(
   cors({
