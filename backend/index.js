@@ -19,10 +19,14 @@ const io = new Server(httpServer, {
   },
 });
 
+app.options("*", cors());
+
 app.use(
   cors({
-    origin: "https://socialdraw.netlify.app", // Adjust this to your frontend's URL
+    origin: "https://socialdraw.netlify.app",
     credentials: true,
+    methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
+    allowedHeaders: ["Content-Type", "Authorization"],
   })
 );
 app.use(cookieParser());
