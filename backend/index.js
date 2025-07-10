@@ -115,7 +115,7 @@ io.on("connection", (socket) => {
           sessionId: sid,
           isOnline: userSessions.has(sid),
           isAdmin: userSession.isAdmin,
-          sessionName:sessionNames.get(sid)
+          sessionName: sessionNames.get(sid),
         };
       });
 

@@ -90,22 +90,30 @@ export default function Draw() {
   };
 
   // FIX: Helper function to compare element arrays - Remove from dependencies
-const elementsAreEqual = (
-  elements1: readonly ExcalidrawElement[] | null | undefined,
-  elements2: readonly ExcalidrawElement[] | null | undefined
-): boolean => {
-  if (elements1 === elements2) return true;
-  if (!elements1 || !elements2) return false;
-  if (elements1.length !== elements2.length) return false;
+  const elementsAreEqual = (
+    elements1: readonly ExcalidrawElement[] | null | undefined,
+    elements2: readonly ExcalidrawElement[] | null | undefined
+  ): boolean => {
+    if (elements1 === elements2) return true;
+    if (!elements1 || !elements2) return false;
+    if (elements1.length !== elements2.length) return false;
 
-  return elements1.every((el1, index) => {
-    const el2 = elements2[index];
-    if (!el2) return false;
-    
-    // Just compare versionNonce - it should change on any modification
-    return el1.id === el2.id && el1.versionNonce === el2.versionNonce;
-  });
-};
+    return elements1.every((el1, index) => {
+      const el2 = elements2[index];
+      if (!el2) return false;
+      
+      // Compare multiple properties to catch all changes including position
+      return (
+        el1.id === el2.id && 
+        el1.versionNonce === el2.versionNonce &&
+        el1.x === el2.x &&
+        el1.y === el2.y &&
+        el1.width === el2.width &&
+        el1.height === el2.height &&
+        el1.angle === el2.angle
+      );
+    });
+  };
 
   // Update scene with retry mechanism - FIXED: Remove from dependencies
   const updateSceneWithRetry = (elements: readonly ExcalidrawElement[]) => {
@@ -274,7 +282,7 @@ const elementsAreEqual = (
     const isReturningUser =
       sessionStorage.getItem(`room_${drawingId}_visited`) === "true";
 
-    socketRef.current = io("https://social-draw-full.onrender.com/", {
+    socketRef.current = io("http://localhost:3000", {
       withCredentials: true,
       transports: ["websocket", "polling"],
     });
@@ -477,7 +485,7 @@ const elementsAreEqual = (
       ) {
         setSaving(true);
         try {
-          broadcastDrawingUpdate(debouncedSceneElements);
+          broadcastDrawingUpdate(excalidrawAPIRef.current?.getSceneElements() ?? []);
 
           await Axios.post(`/api/update-drawing?id=${drawingId}`, {
             drawings: excalidrawAPIRef.current?.getSceneElements(),
