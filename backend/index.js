@@ -13,7 +13,7 @@ const app = express();
 const httpServer = createServer(app);
 const io = new Server(httpServer, {
   cors: {
-    origin: "https://socialdraw.netlify.app", // Match your frontend URL
+    origin: "https://socialdraw.netlify.app/", // Match your frontend URL
     credentials: true,
     methods: ["GET", "POST"],
   },
@@ -21,7 +21,7 @@ const io = new Server(httpServer, {
 
 app.use(
   cors({
-    origin: "https://socialdraw.netlify.app", // Adjust this to your frontend's URL
+    origin: "https://socialdraw.netlify.app/", // Adjust this to your frontend's URL
     credentials: true,
   })
 );

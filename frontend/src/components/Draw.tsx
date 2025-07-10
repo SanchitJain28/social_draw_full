@@ -101,10 +101,10 @@ export default function Draw() {
     return elements1.every((el1, index) => {
       const el2 = elements2[index];
       if (!el2) return false;
-      
+
       // Compare multiple properties to catch all changes including position
       return (
-        el1.id === el2.id && 
+        el1.id === el2.id &&
         el1.versionNonce === el2.versionNonce &&
         el1.x === el2.x &&
         el1.y === el2.y &&
@@ -245,26 +245,24 @@ export default function Draw() {
 
   // FIX: Handle onChange with proper checks - Remove from dependencies
   const handleOnchange = (elements: readonly ExcalidrawElement[] | null) => {
-  // Ignore changes during remote updates or initial load
-  if (
-    isReceivingUpdate ||
-    isProcessingRemoteUpdate.current ||
-    !isInitialLoadComplete.current
-  ) {
-    return;
-  }
+    // Ignore changes during remote updates or initial load
+    if (
+      isReceivingUpdate ||
+      isProcessingRemoteUpdate.current ||
+      !isInitialLoadComplete.current
+    ) {
+      return;
+    }
 
-  // Compare with the latest elements we've seen
-  if (elementsAreEqual(elements, latestElementsRef.current)) {
-    console.log("SAME");
-    return;
-  }
+    // Compare with the latest elements we've seen
+    if (elementsAreEqual(elements, latestElementsRef.current)) {
+      return;
+    }
 
-  // Update both ref and state
-  latestElementsRef.current = elements;
-  setSceneElements(elements as readonly OrderedExcalidrawElement[]);
-};
-
+    // Update both ref and state
+    latestElementsRef.current = elements;
+    setSceneElements(elements as readonly OrderedExcalidrawElement[]);
+  };
 
   // FIX: Socket initialization - Only run once
   useEffect(() => {
@@ -485,17 +483,14 @@ export default function Draw() {
       ) {
         setSaving(true);
         try {
-          broadcastDrawingUpdate(excalidrawAPIRef.current?.getSceneElements() ?? []);
+          broadcastDrawingUpdate(
+            excalidrawAPIRef.current?.getSceneElements() ?? []
+          );
 
           await Axios.post(`/api/update-drawing?id=${drawingId}`, {
             drawings: excalidrawAPIRef.current?.getSceneElements(),
           });
           setLastSaved(new Date());
-          toast.success("Drawing saved", {
-            position: "bottom-right",
-            autoClose: 1000,
-            hideProgressBar: true,
-          });
         } catch (error) {
           console.log("Save error:", error);
           toast.error("Failed to save drawing", {

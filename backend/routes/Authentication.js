@@ -3,6 +3,11 @@ import { User } from "../Schemmas/UserSchemma.js";
 import { upload } from "../middleware/multer.js";
 import { uploadImage } from "../utils/clodinary.js";
 import { verifyUser } from "../middleware/verifyUser.js";
+import { OAuth2Client } from "google-auth-library";
+
+const client = new OAuth2Client(
+  "940477754790-mvjfajre7go8hir3ngh5ds6vd8kgsg48.apps.googleusercontent.com"
+);
 export const router = expess.Router();
 import jwt from "jsonwebtoken";
 router.get("/api/test", async (req, res) => {
@@ -60,6 +65,14 @@ router.post("/api/login", async (req, res) => {
         message: "User Not Found,Please regester on this app",
       });
     }
+
+    if (user.authType === "google") {
+      return res.status(400).json({
+        status: false,
+        message:
+          "Please login with google Please , this email is associate with email login",
+      });
+    }
     //CHECK THE PASSWORD
     const isPasswordCorrect = await user.isPasswordCorrect(password);
     //PASSWORD IS INCORRECT
@@ -75,14 +88,13 @@ router.post("/api/login", async (req, res) => {
       httpOnly: true,
       secure: true,
       expires: new Date(Date.now() + 10 * 24 * 60 * 60 * 1000),
-      sameSite: 'None'
+      sameSite: "None",
     };
     const option = {
       httpOnly: true,
       secure: true,
       expires: new Date(Date.now() + 6 * 60 * 60 * 1000),
-      sameSite: 'None'
-
+      sameSite: "None",
     };
     user.refreshToken = refreshToken;
     await user.save();
@@ -130,10 +142,7 @@ router.post("/api/refresh-access-token", async (req, res) => {
         .json({ status: false, message: "Please Login Again" });
     }
     //verify refresh token
-    const decodedToken =  jwt.verify(
-      refreshToken,
-      "SanchitkaKhufiyaSecret"
-    );
+    const decodedToken = jwt.verify(refreshToken, "SanchitkaKhufiyaSecret");
     const user = await User.findById(decodedToken.id).select("-password");
     if (!user) {
       return res.status(400).json({
@@ -153,15 +162,13 @@ router.post("/api/refresh-access-token", async (req, res) => {
       httpOnly: true,
       secure: true,
       expires: new Date(Date.now() + 10 * 24 * 60 * 60 * 1000),
-      sameSite: 'None'
-
+      sameSite: "None",
     };
     const option = {
       httpOnly: true,
       secure: true,
       expires: new Date(Date.now() + 6 * 60 * 60 * 1000),
-      sameSite: 'None'
-
+      sameSite: "None",
     };
     user.refreshToken = newRefreshToken;
     await user.save();
@@ -179,6 +186,84 @@ router.post("/api/refresh-access-token", async (req, res) => {
       status: false,
       message: "Internal Server Error ,not authenticated",
       error,
+    });
+  }
+});
+
+router.post("/api/auth/google", async (req, res) => {
+  const { token } = req.body;
+
+  if (!token) {
+    return res.status(400).json({
+      status: false,
+      message: "Missing Google token",
+    });
+  }
+
+  try {
+    const ticket = await client.verifyIdToken({
+      idToken: token,
+      audience:
+        "940477754790-mvjfajre7go8hir3ngh5ds6vd8kgsg48.apps.googleusercontent.com",
+    });
+
+    const payload = ticket.getPayload();
+
+    let user = await User.findOne({ email: payload.email });
+    let isNew = false;
+
+    if (!user) {
+      user = new User({
+        name: payload.name,
+        email: payload.email,
+        profilePic: payload.picture,
+        authType: "google",
+      });
+      await user.save();
+      isNew = true;
+    }
+
+    if (user.authType === "email") {
+      user.authType = "hybrid";
+      await user.save();
+    }
+
+    const refreshToken = await user.generateRefreshToken();
+    const accessToken = await user.generateAccessToken();
+
+    user.refreshToken = refreshToken;
+    await user.save();
+
+    const refreshTokenOption = {
+      httpOnly: true,
+      secure: true,
+      expires: new Date(Date.now() + 10 * 24 * 60 * 60 * 1000),
+      sameSite: "None",
+    };
+
+    const accessTokenOption = {
+      httpOnly: true,
+      secure: true,
+      expires: new Date(Date.now() + 6 * 60 * 60 * 1000),
+      sameSite: "None",
+    };
+
+    return res
+      .status(201)
+      .cookie("refreshToken", refreshToken, refreshTokenOption)
+      .cookie("accessToken", accessToken, accessTokenOption)
+      .json({
+        status: true,
+        message: isNew
+          ? "Google login successful, account created"
+          : "Google login successful",
+        user,
+      });
+  } catch (error) {
+    console.error("Google login error:", error);
+    return res.status(500).json({
+      status: false,
+      message: "Internal server error",
     });
   }
 });

@@ -1,18 +1,28 @@
-"use client"
+"use client";
 
-import { useForm } from "react-hook-form"
-import { useState } from "react"
-import { zodResolver } from "@hookform/resolvers/zod"
-import { toast } from "sonner"
-import { SignInSchemma } from "../Schemmas/SignInSchemma"
-import Cookies from "js-cookie"
-import { useNavigate } from "react-router"
-import { Axios } from "@/ApiFormat"
-import { Mail, Lock, LogIn, Loader2, Eye, EyeOff, AlertCircle } from "lucide-react"
+import { useForm } from "react-hook-form";
+import { useState } from "react";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { toast } from "sonner";
+import { SignInSchemma } from "../Schemmas/SignInSchemma";
+import Cookies from "js-cookie";
+import { useNavigate } from "react-router";
+import { Axios } from "@/ApiFormat";
+import {
+  Mail,
+  Lock,
+  LogIn,
+  Loader2,
+  Eye,
+  EyeOff,
+  AlertCircle,
+} from "lucide-react";
+import { GoogleLogin } from "@react-oauth/google";
+import { useAuth } from "@/hooks/useAuth";
 
 interface FormDataProps {
-  email: string
-  password: string
+  email: string;
+  password: string;
 }
 
 const setAccessToken = (token: string) => {
@@ -21,14 +31,16 @@ const setAccessToken = (token: string) => {
     secure: true, // Only send over HTTPS
     sameSite: "Strict", // Prevent CSRF attacks
     path: "/", // Available throughout the app
-  })
-}
+  });
+};
 
 export default function Login() {
-  const router = useNavigate()
-  const [loading, setLoading] = useState<boolean>(false)
-  const [showPassword, setShowPassword] = useState<boolean>(false)
-  const [loginError, setLoginError] = useState<string | null>(null)
+  const router = useNavigate();
+  const [loading, setLoading] = useState<boolean>(false);
+  const [showPassword, setShowPassword] = useState<boolean>(false);
+  const [loginError, setLoginError] = useState<string | null>(null);
+
+  const { user, setUser } = useAuth();
 
   const {
     register,
@@ -36,34 +48,43 @@ export default function Login() {
     formState: { errors },
   } = useForm({
     resolver: zodResolver(SignInSchemma),
-  })
+  });
 
   const onSubmit = async (data: FormDataProps) => {
-    setLoading(true)
-    setLoginError(null)
+    setLoading(true);
+    setLoginError(null);
     try {
-      const response = await Axios.post("/api/login", data)
+      const { data: resData } = await Axios.post("/api/login", data);
 
       // Set the token from the response
-      if (response.data && response.data.token) {
-        setAccessToken(response.data.token)
+      if (resData && resData.token) {
+        setAccessToken(resData.token);
       }
 
       toast.success("Login successful", {
         description: "Welcome back to SocialDraw!",
-      })
+      });
 
-      router("/")
-      console.log(response)
+      setUser(resData.data);
+
+      router("/");
+      console.log(resData);
     } catch (error) {
-      console.log(error)
-      setLoginError("Login failed. Please check your credentials and try again.")
+      console.log(error);
+      setLoginError(
+        "Login failed. Please check your credentials and try again."
+      );
       toast.error("Login failed", {
         description: "Please check your credentials and try again.",
-      })
+      });
     } finally {
-      setLoading(false)
+      setLoading(false);
     }
+  };
+
+  if (user) {
+    router("/");
+    return;
   }
 
   return (
@@ -74,8 +95,12 @@ export default function Login() {
           <div className="w-16 h-16 bg-gradient-to-br from-indigo-500 to-purple-600 rounded-2xl flex items-center justify-center mx-auto mb-4">
             <LogIn className="h-8 w-8 text-white" />
           </div>
-          <h1 className="text-3xl font-bold text-indigo-900 mb-2">Welcome Back</h1>
-          <p className="text-lg text-indigo-700">Sign in to continue to SocialDraw</p>
+          <h1 className="text-3xl font-bold text-indigo-900 mb-2">
+            Welcome Back
+          </h1>
+          <p className="text-lg text-indigo-700">
+            Sign in to continue to SocialDraw
+          </p>
         </div>
 
         {/* Form Card */}
@@ -126,7 +151,10 @@ export default function Login() {
                     <span>Password</span>
                   </div>
                 </label>
-                <a href="/forgot-password" className="text-sm text-indigo-600 hover:text-indigo-800">
+                <a
+                  href="/forgot-password"
+                  className="text-sm text-indigo-600 hover:text-indigo-800"
+                >
                   Forgot password?
                 </a>
               </div>
@@ -146,7 +174,11 @@ export default function Login() {
                   onClick={() => setShowPassword(!showPassword)}
                   className="absolute right-3 top-1/2 transform -translate-y-1/2 text-slate-400 hover:text-slate-600"
                 >
-                  {showPassword ? <EyeOff className="h-5 w-5" /> : <Eye className="h-5 w-5" />}
+                  {showPassword ? (
+                    <EyeOff className="h-5 w-5" />
+                  ) : (
+                    <Eye className="h-5 w-5" />
+                  )}
                 </button>
               </div>
               {errors.password && (
@@ -165,7 +197,10 @@ export default function Login() {
                 type="checkbox"
                 className="h-4 w-4 text-indigo-600 focus:ring-indigo-500 border-slate-300 rounded"
               />
-              <label htmlFor="remember-me" className="ml-2 block text-sm text-slate-700">
+              <label
+                htmlFor="remember-me"
+                className="ml-2 block text-sm text-slate-700"
+              >
                 Remember me for 30 days
               </label>
             </div>
@@ -189,10 +224,31 @@ export default function Login() {
               )}
             </button>
 
+            <GoogleLogin
+              onSuccess={async (credentialResponse) => {
+                const token = credentialResponse.credential;
+                console.log("JWT Token: ", token);
+
+                // Send it to your Express backend
+                const { data } = await Axios.post("/api/auth/google", {
+                  token,
+                });
+
+                console.log("Backend says:", data);
+                setUser(data.user);
+              }}
+              onError={() => {
+                console.log("Login Failed");
+              }}
+            />
+
             {/* Additional Info */}
             <div className="text-center text-sm text-slate-600">
               Don't have an account?{" "}
-              <a href="/signup" className="text-indigo-600 hover:text-indigo-800 font-medium">
+              <a
+                href="/signup"
+                className="text-indigo-600 hover:text-indigo-800 font-medium"
+              >
                 Sign up here
               </a>
             </div>
@@ -206,7 +262,8 @@ export default function Login() {
             <p className="text-sm font-medium">Secure Login</p>
           </div>
           <p className="text-xs text-indigo-600">
-            Your connection to SocialDraw is encrypted and your information is never shared with third parties.
+            Your connection to SocialDraw is encrypted and your information is
+            never shared with third parties.
           </p>
         </div>
 
@@ -245,5 +302,5 @@ export default function Login() {
         </div> */}
       </div>
     </div>
-  )
+  );
 }

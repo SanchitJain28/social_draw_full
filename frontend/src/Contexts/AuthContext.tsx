@@ -1,47 +1,70 @@
 import { Axios } from "@/ApiFormat";
-import { createContext, useEffect, useState } from "react";
+import {
+  createContext,
+  useEffect,
+  useState,
+  ReactNode,
+  Dispatch,
+  SetStateAction,
+} from "react";
 
-interface User {
+// Define user structure
+type BaseUser = {
   _id: string;
   name: string;
   email: string;
-  password: string;
-  profilePic: string;
-  PhoneNo: string;
+  profilePic?: string;
+  PhoneNo?: string;
   createdAt: Date;
-}
+};
 
+type GoogleUser = BaseUser & {
+  authType: "google";
+  password?: never; // Not allowed
+};
+
+type EmailUser = BaseUser & {
+  authType: "email";
+  password: string;
+};
+
+type HybridUser = BaseUser & {
+  authType: "hybrid";
+  password: string;
+};
+
+export type User = GoogleUser | EmailUser | HybridUser;
+
+// Define context type
 interface AuthContextType {
   user: User | null;
   authLoading: boolean;
   refreshAccessToken: () => Promise<void>;
   getUser: () => Promise<void>;
+  setUser: Dispatch<SetStateAction<User | null>>;
 }
 
-// Create context with default value
+// Create context with a placeholder
 export const AuthContext = createContext<AuthContextType>({
   user: null,
   authLoading: false,
   refreshAccessToken: async () => {},
   getUser: async () => {},
+  setUser: () => {}, // ✅ dummy default function to make TS happy
 });
 
-// Custom hook to use auth context
-
-
-export function AuthProvider({ children }: { children: React.ReactNode }) {
+// AuthProvider component
+export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
   const [authLoading, setAuthLoading] = useState<boolean>(false);
 
   const refreshAccessToken = async () => {
     try {
       const response = await Axios.post("/api/refresh-access-token");
-      console.log(response);
-      console.log("token refreshed");
+      console.log("✅ Token refreshed:", response);
     } catch (error) {
-      console.log(error);
-      console.log("error in refreshing token");
-      throw error; // Re-throw to handle in calling function
+      console.error("❌ Error refreshing token:", error);
+      throw error;
     }
   };
 
@@ -49,18 +72,18 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     setAuthLoading(true);
     try {
       const response = await Axios.get("/api/get-user");
-      console.log(response.data.data)
       setUser(response.data.data);
+      console.log("👤 User fetched:", response.data.data);
     } catch (error) {
       console.log(error);
+      console.warn("⚠️ Error fetching user, trying to refresh token...");
       try {
         await refreshAccessToken();
         const response = await Axios.get("/api/get-user");
         setUser(response.data.data);
       } catch (refreshError) {
-        console.log(refreshError);
-        // Clear user on authentication failure
-        setUser(null);
+        console.error("❌ Failed to refresh token:", refreshError);
+        setUser(null); // Log out user
       }
     } finally {
       setAuthLoading(false);
@@ -71,15 +94,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     getUser();
   }, []);
 
-  const contextValue: AuthContextType = {
-    user,
-    authLoading,
-    refreshAccessToken,
-    getUser,
-  };
-
   return (
-    <AuthContext.Provider value={contextValue}>
+    <AuthContext.Provider
+      value={{ user, setUser, authLoading, refreshAccessToken, getUser }}
+    >
       {children}
     </AuthContext.Provider>
   );
