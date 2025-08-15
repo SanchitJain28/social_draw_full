@@ -9,11 +9,13 @@ import { createServer } from "http";
 import { generateSessionName } from "./utils/generateSessionName.js";
 
 RunDatabase();
+const FRONTEND_URL = process.env.APP_BASE_URL_FRONTEND || "http://localhost:5173";
+const BACKEND_URL = process.env.APP_BASE_URL_BACKEND || "http://localhost:3000";
 const app = express();
 const httpServer = createServer(app);
 const io = new Server(httpServer, {
   cors: {
-    origin: "https://socialdraw.netlify.app", // Match your frontend URL
+    origin: FRONTEND_URL, // Match your frontend URL
     credentials: true,
     methods: ["GET", "POST"],
   },
@@ -23,14 +25,14 @@ const io = new Server(httpServer, {
 
 app.use(
   cors({
-    origin: "https://socialdraw.netlify.app",
+    origin: FRONTEND_URL,
     credentials: true,
     methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
     allowedHeaders: ["Content-Type", "Authorization"],
   })
 );
 app.use(cookieParser());
-app.use(express.json()); // Parse JSON request bodies
+app.use(express.json({ limit: '1mb' }));
 app.use(express.urlencoded({ extended: true })); // For form data
 
 // Make io accessible in routes

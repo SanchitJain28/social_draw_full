@@ -280,7 +280,7 @@ export default function Draw() {
     const isReturningUser =
       sessionStorage.getItem(`room_${drawingId}_visited`) === "true";
 
-    socketRef.current = io("http://localhost:3000", {
+    socketRef.current = io(import.meta.env.VITE_APP_BASE_URL_BACKEND, {
       withCredentials: true,
       transports: ["websocket", "polling"],
     });
@@ -567,7 +567,7 @@ export default function Draw() {
           navigate("/dashboard");
         }}
         clearCanvasForAll={clearCanvasForAll}
-        shareLink={`https://socialdraw.netlify.app/draw/shared?id=${drawingId}`}
+        shareLink={`${import.meta.env.VITE_APP_BASE_URL_FRONTEND}/draw/shared?id=${drawingId}`}
         setShowDeleteConfirm={setShowDeleteConfirm}
       />
       {/* Canvas */}
