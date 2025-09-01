@@ -254,7 +254,7 @@ export default function SharedDraw() {
     const isReturningUser =
       sessionStorage.getItem(`room_${drawingId}_visited`) === "true";
 
-    socketRef.current = io("http://localhost:3000", {
+    socketRef.current = io(import.meta.env.VITE_APP_BASE_URL_BACKEND, {
       withCredentials: true,
       transports: ["websocket", "polling"],
     });

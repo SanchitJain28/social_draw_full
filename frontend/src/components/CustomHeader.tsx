@@ -317,6 +317,8 @@ export default function CustomHeader({
                   type="text"
                   readOnly
                   value={shareLink}
+                  placeholder="Collaboration link"
+                  title="Collaboration link"
                   className="flex-1 p-2 border border-slate-600 rounded-md bg-slate-700 text-slate-200 focus:outline-none focus:ring-2 focus:ring-blue-500 font-mono text-xs md:text-sm"
                 />
                 <motion.button
