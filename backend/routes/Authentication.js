@@ -85,14 +85,14 @@ router.post("/api/login", async (req, res) => {
     const refreshToken = await user.generateRefreshToken();
     const accessToken = await user.generateAccessToken();
     const refreshTokenOption = {
-      httpOnly: false,
-      secure: false,
+      httpOnly: true,
+      secure: true,
       expires: new Date(Date.now() + 10 * 24 * 60 * 60 * 1000),
       sameSite: "None",
     };
     const option = {
-      httpOnly: false,
-      secure: false,
+      httpOnly: true,
+      secure: true,
       expires: new Date(Date.now() + 6 * 60 * 60 * 1000),
       sameSite: "None",
     };
@@ -159,14 +159,14 @@ router.post("/api/refresh-access-token", async (req, res) => {
     const newRefreshToken = await user.generateRefreshToken();
     const newAccessToken = await user.generateAccessToken();
     const refreshTokenOption = {
-      httpOnly: false,
-      secure: false,
+      httpOnly: true,
+      secure: true,
       expires: new Date(Date.now() + 10 * 24 * 60 * 60 * 1000),
       sameSite: "None",
     };
     const option = {
-      httpOnly: false,
-      secure: false,
+      httpOnly: true,
+      secure: true,
       expires: new Date(Date.now() + 6 * 60 * 60 * 1000),
       sameSite: "None",
     };
@@ -235,15 +235,17 @@ router.post("/api/auth/google", async (req, res) => {
     await user.save();
 
     const refreshTokenOption = {
-      httpOnly: false,
-      secure: false,
+      httpOnly: true,
+      secure: true,
       expires: new Date(Date.now() + 10 * 24 * 60 * 60 * 1000),
+      sameSite: "None",
     };
 
     const accessTokenOption = {
-      httpOnly: false,
-      secure: false,
+      httpOnly: true,
+      secure: true,
       expires: new Date(Date.now() + 6 * 60 * 60 * 1000),
+      sameSite: "None",
     };
 
     return res
