@@ -235,15 +235,15 @@ router.post("/api/auth/google", async (req, res) => {
     await user.save();
 
     const refreshTokenOption = {
-      httpOnly: true,
-      secure: true,
+      httpOnly: false,
+      secure: false,
       expires: new Date(Date.now() + 10 * 24 * 60 * 60 * 1000),
       sameSite: "None",
     };
 
     const accessTokenOption = {
-      httpOnly: true,
-      secure: true,
+      httpOnly: false,
+      secure: false,
       expires: new Date(Date.now() + 6 * 60 * 60 * 1000),
       sameSite: "None",
     };
