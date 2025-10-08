@@ -258,6 +258,8 @@ router.post("/api/auth/google", async (req, res) => {
           ? "Google login successful, account created"
           : "Google login successful",
         user,
+        accessToken,
+        refreshToken
       });
   } catch (error) {
     console.error("Google login error:", error);

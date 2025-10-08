@@ -227,12 +227,17 @@ export default function Login() {
             <GoogleLogin
               onSuccess={async (credentialResponse) => {
                 const token = credentialResponse.credential;
-                console.log("JWT Token: ", token);
 
-                // Send it to your Express backend
                 const { data } = await Axios.post("/api/auth/google", {
                   token,
                 });
+
+                if (data.accessToken) {
+                  localStorage.setItem("accessToken", data.accessToken);
+                }
+                if (data.refreshToken) {
+                  localStorage.setItem("accessToken", data.refreshToken);
+                }
 
                 console.log("Backend says:", data);
                 setUser(data.user);
