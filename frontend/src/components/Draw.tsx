@@ -35,13 +35,11 @@ export default function Draw() {
   //handling user authentication and loading state
   const { user, authLoading } = useAuth();
 
-  // Add flag to track if we're processing a remote update
+  // Track if we're processing a remote update
   const isProcessingRemoteUpdate = useRef<boolean>(false);
-  const lastLocalUpdateId = useRef<string | null>(null);
 
-  // FIX: Add flag to track initial load completion
+  // Track initial load completion
   const isInitialLoadComplete = useRef<boolean>(false);
-  const initialElementsRef = useRef<readonly ExcalidrawElement[] | null>(null);
   const [isCollabrating, setIsCollabrating] = useState<boolean>(false);
 
   //EXCVALIDRAW STATES
@@ -67,19 +65,15 @@ export default function Draw() {
   const [isReceivingUpdate, setIsReceivingUpdate] = useState<boolean>(false);
 
   const debouncedSceneElements = useDebounce(sceneElements, 600);
-  const latestElementsRef = useRef<readonly ExcalidrawElement[] | null>(null);
 
-  // FIX: Stable reference for drawing ID
+  const lastSavedElementsHash = useRef<string | null>(null);
+
   const drawingId = searchParams.get("id");
 
-  // Generate consistent color for user - FIXED: Remove from dependencies
-
-  // Utility function to generate a unique session ID
   const generateSessionId = () => {
     return Math.random().toString(36).substr(2, 9) + Date.now().toString(36);
   };
 
-  // Get or create session ID
   const getSessionId = () => {
     let sessionId = sessionStorage.getItem("drawing_session_id");
     if (!sessionId) {
@@ -89,43 +83,26 @@ export default function Draw() {
     return sessionId;
   };
 
-  // FIX: Helper function to compare element arrays - Remove from dependencies
-  const elementsAreEqual = (
-    elements1: readonly ExcalidrawElement[] | null | undefined,
-    elements2: readonly ExcalidrawElement[] | null | undefined
-  ): boolean => {
-    if (elements1 === elements2) return true;
-    if (!elements1 || !elements2) return false;
-    if (elements1.length !== elements2.length) return false;
-
-    return elements1.every((el1, index) => {
-      const el2 = elements2[index];
-      if (!el2) return false;
-
-      // Compare multiple properties to catch all changes including position
-      return (
-        el1.id === el2.id &&
-        el1.versionNonce === el2.versionNonce &&
-        el1.x === el2.x &&
-        el1.y === el2.y &&
-        el1.width === el2.width &&
-        el1.height === el2.height &&
-        el1.angle === el2.angle
-      );
-    });
+  const createElementsHash = (
+    elements: readonly ExcalidrawElement[] | null | undefined
+  ): string => {
+    if (!elements || elements.length === 0) return "empty";
+    return elements
+      .map(
+        (el) =>
+          `${el.id}:${el.version}:${el.versionNonce}:${el.x}:${el.y}:${el.width}:${el.height}:${el.angle}`
+      )
+      .join("|");
   };
 
-  // Update scene with retry mechanism - FIXED: Remove from dependencies
   const updateSceneWithRetry = (elements: readonly ExcalidrawElement[]) => {
     const attemptUpdate = (retries = 3) => {
       if (excalidrawAPIRef.current) {
-        // Set flag before updating to prevent onChange from firing
         isProcessingRemoteUpdate.current = true;
         excalidrawAPIRef.current.updateScene({ elements });
-        // Reset flag after a short delay
         setTimeout(() => {
           isProcessingRemoteUpdate.current = false;
-        }, 50);
+        }, 100);
         return;
       }
 
@@ -141,13 +118,9 @@ export default function Draw() {
     attemptUpdate();
   };
 
-  // Process queued updates when API becomes available
   useEffect(() => {
     if (excalidrawAPI && pendingUpdatesRef.current.length > 0) {
-      console.log(
-        "Processing queued updates:",
-        pendingUpdatesRef.current.length
-      );
+
       const lastUpdate = pendingUpdatesRef.current.pop();
       if (lastUpdate) {
         isProcessingRemoteUpdate.current = true;
@@ -155,25 +128,25 @@ export default function Draw() {
         setSceneElements(lastUpdate as readonly OrderedExcalidrawElement[]);
         setTimeout(() => {
           isProcessingRemoteUpdate.current = false;
-        }, 50);
+        }, 100);
       }
       pendingUpdatesRef.current = [];
     }
-  }, [excalidrawAPI]); // Only depend on excalidrawAPI
+  }, [excalidrawAPI]);
 
-  // FIX: Broadcast function - Remove from dependencies
+  // Broadcast function
   const broadcastDrawingUpdate = (elements: readonly ExcalidrawElement[]) => {
-    const updateId = Date.now().toString();
-    lastLocalUpdateId.current = updateId;
-    console.log("Broadcasting LIVE UPDATES ");
-    socketRef.current?.emit("drawing-update", {
+    if (!isCollabrating || !socketRef.current || !isConnected) {
+      return;
+    }
+
+    socketRef.current.emit("drawing-update", {
       roomId: drawingId,
       elements,
-      updateId,
+      updateId: Date.now().toString(),
     });
   };
 
-  // Clear canvas for all users
   const clearCanvasForAll = () => {
     if (socketRef.current && isConnected) {
       socketRef.current.emit("clear-canvas", { roomId: drawingId });
@@ -184,16 +157,13 @@ export default function Draw() {
       setSceneElements([]);
       setTimeout(() => {
         isProcessingRemoteUpdate.current = false;
-      }, 50);
+      }, 100);
     }
   };
 
   const deleteDrawing = async () => {
     try {
-      const response = await Axios.delete(
-        `/api/delete-drawing?id=${drawingId}`
-      );
-      console.log(response);
+      await Axios.delete(`/api/delete-drawing?id=${drawingId}`);
       navigate("/dashboard");
       toast.success("Drawing deleted successfully", {
         position: "top-right",
@@ -218,15 +188,18 @@ export default function Draw() {
       } = await Axios.get(`/api/single-drawing?id=${drawingId}`);
       if (data.userId !== user?._id) {
         setError("You do not have permission to view this drawing.");
+        return;
       }
-      // FIX: Store initial elements for comparison
+
       const elements = data.elements as readonly OrderedExcalidrawElement[];
-      initialElementsRef.current = elements;
 
       setInitialDrawings(data.elements);
       setSceneElements(elements);
 
-      // FIX: Mark initial load as complete after a short delay
+      // Store initial hash
+      lastSavedElementsHash.current = createElementsHash(elements);
+
+      // Mark initial load as complete after a delay
       setTimeout(() => {
         isInitialLoadComplete.current = true;
         console.log("Initial load completed");
@@ -243,28 +216,19 @@ export default function Draw() {
     }
   };
 
-  // FIX: Handle onChange with proper checks - Remove from dependencies
   const handleOnchange = (elements: readonly ExcalidrawElement[] | null) => {
-    // Ignore changes during remote updates or initial load
     if (
       isReceivingUpdate ||
       isProcessingRemoteUpdate.current ||
       !isInitialLoadComplete.current
     ) {
+      console.log("Ignoring onChange - remote update or initial load");
       return;
     }
 
-    // Compare with the latest elements we've seen
-    if (elementsAreEqual(elements, latestElementsRef.current)) {
-      return;
-    }
-
-    // Update both ref and state
-    latestElementsRef.current = elements;
     setSceneElements(elements as readonly OrderedExcalidrawElement[]);
   };
 
-  // FIX: Socket initialization - Only run once
   useEffect(() => {
     if (!drawingId || isSocketInitialized.current) return;
 
@@ -291,7 +255,7 @@ export default function Draw() {
       setIsConnected(true);
       socket.emit("join-room", {
         roomId: drawingId,
-        userId: user?._id || null, // Use user ID or socket ID if not authenticated
+        userId: user?._id || null,
         isAdmin: true,
         socketId: socket.id,
         isLogin: user ? true : false,
@@ -377,10 +341,8 @@ export default function Draw() {
         });
       } else {
         setConnectedUsers((prev) => {
-          console.log(prev, data);
           const userExists = prev.some((user) => user.id === data.sessionId);
           if (!userExists) {
-            console.log("USER ADDDED");
             return [
               ...prev,
               {
@@ -393,7 +355,6 @@ export default function Draw() {
               },
             ];
           }
-          console.log("NOTHING ADDED");
           return prev;
         });
       }
@@ -414,7 +375,6 @@ export default function Draw() {
       }
     });
 
-    // Improve drawing update handler
     socket.on(
       "drawing-update",
       (data: { elements: readonly ExcalidrawElement[]; userId: string }) => {
@@ -422,22 +382,23 @@ export default function Draw() {
           console.log("Ignoring own update");
           return;
         }
+
+        console.log("Received remote update");
         setIsReceivingUpdate(true);
         updateSceneWithRetry(data.elements);
 
-        setTimeout(() => setIsReceivingUpdate(false), 100);
+        setTimeout(() => setIsReceivingUpdate(false), 150);
       }
     );
 
     socket.on("canvas-cleared", (data: { userId: string }) => {
       if (data.userId !== socket.id) {
-        console.log("Canvas cleared by:", data.userId);
         if (excalidrawAPIRef.current) {
           isProcessingRemoteUpdate.current = true;
           excalidrawAPIRef.current.updateScene({ elements: [] });
           setTimeout(() => {
             isProcessingRemoteUpdate.current = false;
-          }, 50);
+          }, 100);
         }
         setSceneElements([]);
         toast.info("Canvas was cleared by another user", {
@@ -454,9 +415,8 @@ export default function Draw() {
         isSocketInitialized.current = false;
       }
     };
-  }, [drawingId, isCollabrating]); // Only depend on drawingId
+  }, [drawingId, user?._id]);
 
-  // FIX: Load drawing only once
   useEffect(() => {
     const isCollabrating = getCookie("collaborating");
     if (isCollabrating) {
@@ -468,45 +428,62 @@ export default function Draw() {
     if (user) {
       getDrawing();
     }
-  }, [user]); // Only depend on drawingId
+  }, [user]);
 
-  // FIX: Completely rewrite the save useEffect to prevent loops
+  // FIX: Improved save logic with hash comparison
   useEffect(() => {
     const updateDrawing = async () => {
       if (
-        debouncedSceneElements &&
-        initialDrawings &&
-        !isReceivingUpdate &&
-        !isProcessingRemoteUpdate.current &&
-        isInitialLoadComplete.current &&
-        !elementsAreEqual(debouncedSceneElements, initialElementsRef.current)
+        !debouncedSceneElements ||
+        !initialDrawings ||
+        isReceivingUpdate ||
+        isProcessingRemoteUpdate.current ||
+        !isInitialLoadComplete.current
       ) {
-        setSaving(true);
-        try {
-          broadcastDrawingUpdate(
-            excalidrawAPIRef.current?.getSceneElements() ?? []
-          );
+        return;
+      }
 
-          await Axios.post(`/api/update-drawing?id=${drawingId}`, {
-            drawings: excalidrawAPIRef.current?.getSceneElements(),
-          });
-          setLastSaved(new Date());
-        } catch (error) {
-          console.log("Save error:", error);
-          toast.error("Failed to save drawing", {
-            position: "top-right",
-            autoClose: 3000,
-          });
-        } finally {
-          setSaving(false);
-        }
+      const currentHash = createElementsHash(debouncedSceneElements);
+
+      if (currentHash === lastSavedElementsHash.current) {
+        console.log("No changes detected (hash match), skipping save");
+        return;
+      }
+
+      setSaving(true);
+
+      try {
+        const currentElements =
+          excalidrawAPIRef.current?.getSceneElements() ?? [];
+
+        broadcastDrawingUpdate(currentElements);
+
+        await Axios.post(`/api/update-drawing?id=${drawingId}`, {
+          drawings: currentElements,
+        });
+
+        lastSavedElementsHash.current = currentHash;
+        setLastSaved(new Date());
+      } catch (error) {
+        console.log("Save error:", error);
+        toast.error("Failed to save drawing", {
+          position: "top-right",
+          autoClose: 3000,
+        });
+      } finally {
+        setSaving(false);
       }
     };
 
-    // Add a small delay to ensure we don't save during rapid updates
     const saveTimer = setTimeout(updateDrawing, 100);
     return () => clearTimeout(saveTimer);
-  }, [debouncedSceneElements]); // Only essential dependencies
+  }, [
+    debouncedSceneElements,
+    initialDrawings,
+    isReceivingUpdate,
+    drawingId,
+    isCollabrating,
+  ]);
 
   if (loading || authLoading) {
     return (
@@ -553,10 +530,8 @@ export default function Draw() {
 
   return (
     <div className="h-screen bg-slate-900 flex flex-col">
-      {/* Header */}
       <CustomHeader
         onCollaborateStart={(status) => {
-          console.log(status);
           setIsCollabrating(status);
         }}
         saving={saving}
@@ -567,7 +542,9 @@ export default function Draw() {
           navigate("/dashboard");
         }}
         clearCanvasForAll={clearCanvasForAll}
-        shareLink={`${import.meta.env.VITE_APP_BASE_URL_FRONTEND}/draw/shared?id=${drawingId}`}
+        shareLink={`${
+          import.meta.env.VITE_APP_BASE_URL_FRONTEND
+        }/draw/shared?id=${drawingId}`}
         setShowDeleteConfirm={setShowDeleteConfirm}
       />
       {/* Canvas */}
