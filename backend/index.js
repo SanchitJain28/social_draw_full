@@ -9,7 +9,7 @@ import { createServer } from "http";
 import { generateSessionName } from "./utils/generateSessionName.js";
 
 RunDatabase();
-const FRONTEND_URL = process.env.APP_BASE_URL_FRONTEND || "http://localhost:5173";
+const FRONTEND_URL = process.env.APP_BASE_URL_FRONTEND || "https://socialdraw.netlify.app";
 const BACKEND_URL = process.env.APP_BASE_URL_BACKEND || "http://localhost:3000";
 const app = express();
 const httpServer = createServer(app);
