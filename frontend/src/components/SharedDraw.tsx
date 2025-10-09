@@ -30,13 +30,11 @@ export default function SharedDraw() {
   const isSocketInitialized = useRef<boolean>(false);
   const pendingUpdatesRef = useRef<ExcalidrawElement[][]>([]);
 
-  // Add flag to track if we're processing a remote update
+  // Track if we're processing a remote update
   const isProcessingRemoteUpdate = useRef<boolean>(false);
-  const lastLocalUpdateId = useRef<string | null>(null);
 
-  // FIX: Add flag to track initial load completion
+  // Track initial load completion
   const isInitialLoadComplete = useRef<boolean>(false);
-  const initialElementsRef = useRef<readonly ExcalidrawElement[] | null>(null);
 
   const [excalidrawAPI, setExcalidrawAPI] =
     useState<ExcalidrawImperativeAPI | null>(null);
@@ -63,39 +61,28 @@ export default function SharedDraw() {
   //auth handling
   const { user, authLoading } = useAuth();
 
-  // FIX: Stable reference for drawing ID
+  // FIX: Use hash-based comparison instead of saved elements ref
+  const lastSavedElementsHash = useRef<string | null>(null);
+
+  // Stable reference for drawing ID
   const drawingId = searchParams.get("id");
 
-  // Generate consistent color for user - FIXED: Remove from dependencies
+  // FIX: Create a hash of elements for comparison (much more reliable)
+  const createElementsHash = (
+    elements: readonly ExcalidrawElement[] | null | undefined
+  ): string => {
+    if (!elements || elements.length === 0) return "empty";
 
-  // FIX: Helper function to compare element arrays - Remove from dependencies
-     const elementsAreEqual = (
-    elements1: readonly ExcalidrawElement[] | null | undefined,
-    elements2: readonly ExcalidrawElement[] | null | undefined
-  ): boolean => {
-    if (elements1 === elements2) return true;
-    if (!elements1 || !elements2) return false;
-    if (elements1.length !== elements2.length) return false;
-
-    return elements1.every((el1, index) => {
-      const el2 = elements2[index];
-      if (!el2) return false;
-      
-      // Compare multiple properties to catch all changes including position
-      return (
-        el1.id === el2.id && 
-        el1.versionNonce === el2.versionNonce &&
-        el1.x === el2.x &&
-        el1.y === el2.y &&
-        el1.width === el2.width &&
-        el1.height === el2.height &&
-        el1.angle === el2.angle
-      );
-    });
+    // Create a hash based on critical properties that change when elements are modified
+    return elements
+      .map(
+        (el) =>
+          `${el.id}:${el.version}:${el.versionNonce}:${el.x}:${el.y}:${el.width}:${el.height}:${el.angle}`
+      )
+      .join("|");
   };
 
-
-  // Update scene with retry mechanism - FIXED: Remove from dependencies
+  // Update scene with retry mechanism
   const updateSceneWithRetry = (elements: readonly ExcalidrawElement[]) => {
     const attemptUpdate = (retries = 3) => {
       if (excalidrawAPIRef.current) {
@@ -105,7 +92,7 @@ export default function SharedDraw() {
         // Reset flag after a short delay
         setTimeout(() => {
           isProcessingRemoteUpdate.current = false;
-        }, 50);
+        }, 100);
         return;
       }
 
@@ -135,20 +122,23 @@ export default function SharedDraw() {
         setSceneElements(lastUpdate as readonly OrderedExcalidrawElement[]);
         setTimeout(() => {
           isProcessingRemoteUpdate.current = false;
-        }, 50);
+        }, 100);
       }
       pendingUpdatesRef.current = [];
     }
-  }, [excalidrawAPI]); // Only depend on excalidrawAPI
+  }, [excalidrawAPI]);
 
-  // FIX: Broadcast function - Remove from dependencies
+  // Broadcast function
   const broadcastDrawingUpdate = (elements: readonly ExcalidrawElement[]) => {
-    const updateId = Date.now().toString();
-    lastLocalUpdateId.current = updateId;
-    socketRef.current?.emit("drawing-update", {
+    if (!socketRef.current || !isConnected) {
+      return;
+    }
+
+    console.log("Broadcasting LIVE UPDATES");
+    socketRef.current.emit("drawing-update", {
       roomId: drawingId,
       elements,
-      updateId,
+      updateId: Date.now().toString(),
     });
   };
 
@@ -163,7 +153,7 @@ export default function SharedDraw() {
       setSceneElements([]);
       setTimeout(() => {
         isProcessingRemoteUpdate.current = false;
-      }, 50);
+      }, 100);
     }
   };
 
@@ -175,17 +165,18 @@ export default function SharedDraw() {
         data: { data },
       } = await Axios.get(`/api/single-drawing?id=${drawingId}`);
 
-      // FIX: Store initial elements for comparison
       const elements = data.elements as readonly OrderedExcalidrawElement[];
-      initialElementsRef.current = elements;
 
       setInitialDrawings(data.elements);
       setSceneElements(elements);
 
-      // FIX: Mark initial load as complete after a short delay
+      // Store initial hash
+      lastSavedElementsHash.current = createElementsHash(elements);
+
+      // Mark initial load as complete after a delay
       setTimeout(() => {
         isInitialLoadComplete.current = true;
-        // console.log("Initial load completed");
+        console.log("Initial load completed");
       }, 1000);
     } catch (error) {
       console.log(error);
@@ -220,7 +211,7 @@ export default function SharedDraw() {
     return sessionId;
   };
 
-  // FIX: Handle onChange with proper checks - Remove from dependencies
+  // FIX: Simplified onChange handler
   const handleOnchange = (elements: readonly ExcalidrawElement[] | null) => {
     // Ignore changes during remote updates or initial load
     if (
@@ -228,18 +219,16 @@ export default function SharedDraw() {
       isProcessingRemoteUpdate.current ||
       !isInitialLoadComplete.current
     ) {
+      console.log("Ignoring onChange - remote update or initial load");
       return;
     }
 
-    // FIX: Compare with current scene elements to prevent unnecessary updates
-    if (elementsAreEqual(elements, sceneElements)) {
-      return;
-    }
-
+    // FIX: Always update state - let the save logic handle comparison
+    console.log("Local change detected, updating state");
     setSceneElements(elements as readonly OrderedExcalidrawElement[] | null);
   };
 
-  // FIX: Socket initialization - Only run once
+  // Socket initialization
   useEffect(() => {
     if (!drawingId || isSocketInitialized.current) return;
 
@@ -247,7 +236,7 @@ export default function SharedDraw() {
       return;
     }
 
-    // console.log("Initializing socket connection for room:", drawingId);
+    console.log("Initializing socket connection for room:", drawingId);
     isSocketInitialized.current = true;
 
     const sessionId = getSessionId();
@@ -265,7 +254,7 @@ export default function SharedDraw() {
       setIsConnected(true);
       socket.emit("join-room", {
         roomId: drawingId,
-        userId: user?._id || null, // Use user ID or socket ID if not authenticated
+        userId: user?._id || null,
         isAdmin: false,
         socketId: socket.id,
         islogin: user ? true : false,
@@ -300,7 +289,6 @@ export default function SharedDraw() {
     });
 
     socket.on("room-users", (users) => {
-      // console.log(users);
       const connectUsersToDrawing = users.map(
         (user: {
           sessionId: string;
@@ -317,14 +305,11 @@ export default function SharedDraw() {
           };
         }
       );
-      // console.log(connectUsersToDrawing);
       setConnectedUsers(connectUsersToDrawing);
     });
 
     socket.on("user-joined", (data) => {
       const { islogin, isAdmin, isNewUser, sessionId, sessionName } = data;
-      // console.log(data);
-      // console.log("User joined:", socketId);
 
       if (isNewUser) {
         setConnectedUsers((prev) => {
@@ -379,7 +364,6 @@ export default function SharedDraw() {
       setConnectedUsers((prev) => prev.filter((user) => user.id !== sessionId));
     });
 
-    // Improve drawing update handler
     socket.on(
       "drawing-update",
       (data: { elements: readonly ExcalidrawElement[]; userId: string }) => {
@@ -387,10 +371,12 @@ export default function SharedDraw() {
           console.log("Ignoring own update");
           return;
         }
+
+        console.log("Received remote update");
         setIsReceivingUpdate(true);
         updateSceneWithRetry(data.elements);
 
-        setTimeout(() => setIsReceivingUpdate(false), 100);
+        setTimeout(() => setIsReceivingUpdate(false), 150);
       }
     );
 
@@ -402,7 +388,7 @@ export default function SharedDraw() {
           excalidrawAPIRef.current.updateScene({ elements: [] });
           setTimeout(() => {
             isProcessingRemoteUpdate.current = false;
-          }, 50);
+          }, 100);
         }
         setSceneElements([]);
         toast.info("Canvas was cleared by another user", {
@@ -419,55 +405,75 @@ export default function SharedDraw() {
         isSocketInitialized.current = false;
       }
     };
-  }, [authLoading]); // Only depend on drawingId
+  }, [authLoading, user?._id]);
 
-  // FIX: Load drawing only once
+  // Load drawing only once
   useEffect(() => {
     if (!authLoading) {
       getDrawing();
     }
-  }, [authLoading]); // Only depend on drawingId
+  }, [authLoading]);
 
-  // FIX: Completely rewrite the save useEffect to prevent loops
+  // FIX: Improved save logic with hash comparison
   useEffect(() => {
     const updateDrawing = async () => {
       if (
-        debouncedSceneElements &&
-        initialDrawings &&
-        !isReceivingUpdate &&
-        !isProcessingRemoteUpdate.current &&
-        isInitialLoadComplete.current &&
-        !elementsAreEqual(debouncedSceneElements, initialElementsRef.current)
+        !debouncedSceneElements ||
+        !initialDrawings ||
+        isReceivingUpdate ||
+        isProcessingRemoteUpdate.current ||
+        !isInitialLoadComplete.current
       ) {
-        setSaving(true);
-        try {
-          broadcastDrawingUpdate(debouncedSceneElements);
+        return;
+      }
 
-          await Axios.post(`/api/update-drawing-shared?id=${drawingId}`, {
-            drawings: debouncedSceneElements,
-          });
-          setLastSaved(new Date());
-          toast.success("Drawing saved", {
-            position: "bottom-right",
-            autoClose: 1000,
-            hideProgressBar: true,
-          });
-        } catch (error) {
-          console.log("Save error:", error);
-          toast.error("Failed to save drawing", {
-            position: "top-right",
-            autoClose: 3000,
-          });
-        } finally {
-          setSaving(false);
-        }
+      // FIX: Use hash comparison instead of deep element comparison
+      const currentHash = createElementsHash(debouncedSceneElements);
+
+      if (currentHash === lastSavedElementsHash.current) {
+        console.log("No changes detected (hash match), skipping save");
+        return;
+      }
+
+      console.log("Changes detected, saving...");
+      setSaving(true);
+
+      try {
+        const currentElements =
+          excalidrawAPIRef.current?.getSceneElements() ?? [];
+
+        // Broadcast to collaborators
+        broadcastDrawingUpdate(currentElements);
+
+        // Save to backend
+        await Axios.post(`/api/update-drawing-shared?id=${drawingId}`, {
+          drawings: currentElements,
+        });
+
+        // Update hash after successful save
+        lastSavedElementsHash.current = currentHash;
+        setLastSaved(new Date());
+        console.log("Save successful");
+
+        toast.success("Drawing saved", {
+          position: "bottom-right",
+          autoClose: 1000,
+          hideProgressBar: true,
+        });
+      } catch (error) {
+        console.log("Save error:", error);
+        toast.error("Failed to save drawing", {
+          position: "top-right",
+          autoClose: 3000,
+        });
+      } finally {
+        setSaving(false);
       }
     };
 
-    // Add a small delay to ensure we don't save during rapid updates
     const saveTimer = setTimeout(updateDrawing, 100);
     return () => clearTimeout(saveTimer);
-  }, [debouncedSceneElements]); // Only essential dependencies
+  }, [debouncedSceneElements, initialDrawings, isReceivingUpdate, drawingId]);
 
   if (loading || authLoading) {
     return (
@@ -512,7 +518,6 @@ export default function SharedDraw() {
     );
   }
 
-  
   return (
     <div className="h-screen bg-slate-900 flex flex-col">
       {/* Header */}
@@ -530,7 +535,6 @@ export default function SharedDraw() {
         clearCanvasForAll={clearCanvasForAll}
         shareLink="localhost:3000/draw?id="
         onCollaborateStart={() => {
-          // You can implement collaboration start logic here if needed
           console.log("Collaboration started");
         }}
       />
@@ -556,8 +560,6 @@ export default function SharedDraw() {
           />
         )}
       </div>
-
-      {/* Delete Confirmation Modal */}
 
       {/* Toast Container */}
       <ToastContainer
